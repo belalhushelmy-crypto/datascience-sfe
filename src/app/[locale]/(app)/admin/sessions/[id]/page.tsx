@@ -1,9 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { AssignmentForm } from "@/components/admin/assignment-form";
 import { AttendanceForm } from "@/components/admin/attendance-form";
-import { FormDialog } from "@/components/admin/form-dialog";
 import { MaterialsPanel } from "@/components/admin/materials-panel";
 import { CsvDownloadButton } from "@/components/admin/csv-download-button";
 import { DeleteSessionForm } from "@/components/admin/delete-session-form";
@@ -45,13 +43,6 @@ type MaterialRow = {
   language: string | null;
 };
 
-type AssessmentRow = {
-  id: string;
-  title: string;
-  deadline: string | null;
-  max_score: number | string;
-};
-
 export default async function AdminSessionPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale: raw, id } = await params;
   const locale = toLocale(raw);
@@ -63,11 +54,10 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
   if (!sessionId.success) notFound();
 
   const t = await getTranslations("admin.session");
-  const ta = await getTranslations("admin.assignments");
   const tc = await getTranslations("common");
 
   const supabase = await createClient();
-  const [sessionsResult, studentsResult, attendanceResult, materialsResult, assessmentsResult] = await Promise.all([
+  const [sessionsResult, studentsResult, attendanceResult, materialsResult] = await Promise.all([
     supabase.rpc("admin_list_sessions"),
     supabase
       .from("profiles")
@@ -87,20 +77,12 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
       .order("created_at", { ascending: true })
       .limit(100)
       .returns<MaterialRow[]>(),
-    supabase
-      .from("assignments")
-      .select("id, title, deadline, max_score")
-      .eq("session_id", sessionId.data)
-      .order("created_at", { ascending: false })
-      .limit(50)
-      .returns<AssessmentRow[]>(),
   ]);
 
   const session = ((sessionsResult.data ?? []) as AdminSessionRow[]).find((row) => row.id === sessionId.data);
   if (!session) notFound();
 
   const students = studentsResult.data ?? [];
-  const assessments = assessmentsResult.data ?? [];
   const attendanceRows = attendanceResult.data ?? [];
   const existing = Object.fromEntries(
     attendanceRows.map((row) => [row.student_id, row.status]),
@@ -114,7 +96,7 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
   const recorded = attendanceRows.length;
   const attendanceRate = students.length > 0 ? Math.round(((present + late) / students.length) * 100) : 0;
 
-  const hasError = Boolean(sessionsResult.error || studentsResult.error || attendanceResult.error || assessmentsResult.error);
+  const hasError = Boolean(sessionsResult.error || studentsResult.error || attendanceResult.error);
 
   return (
     <div className="space-y-6">
@@ -133,53 +115,8 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
 
       {hasError ? <Alert>{tc("errorBody")}</Alert> : null}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <Card>
-          <CardHeader
-            title={t("assessmentsTitle")}
-            description={t("assessmentsSubtitle")}
-            action={
-              <FormDialog
-                trigger={t("newTask")}
-                title={ta("createTitle")}
-                description={ta("createSubtitle")}
-                wide
-              >
-                <AssignmentForm locale={locale} mode="create" sessionId={session.id} />
-              </FormDialog>
-            }
-          />
-          {assessments.length === 0 ? (
-            <div className="p-5">
-              <EmptyState title={t("noAssessments")} />
-            </div>
-          ) : (
-            <ul className="divide-y divide-[var(--line)]">
-              {assessments.map((assessment) => (
-                <li key={assessment.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-[var(--ink)]">{assessment.title}</p>
-                    <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
-                      {assessment.deadline
-                        ? t("dueLabel", { date: formatDate(assessment.deadline, locale, { dateStyle: "medium" }) })
-                        : t("noDeadline")}
-                      {" · "}
-                      {t("pointsLabel", { points: formatNumber(Number(assessment.max_score), locale) })}
-                    </p>
-                  </div>
-                  <Link
-                    href={`/admin/assignments/${assessment.id}`}
-                    className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-xs font-medium text-[var(--ink-soft)] transition hover:border-bronze-400/50 hover:text-[var(--ink)]"
-                  >
-                    {t("viewSubmissions")}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-
-        <div className="space-y-6">
+      <div className="space-y-6">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           <MaterialsPanel locale={locale} sessionId={session.id} materials={materialsResult.data ?? []} />
 
           <Card>
@@ -211,7 +148,6 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
             </div>
           </Card>
 
-          <MaterialsPanel locale={locale} sessionId={session.id} materials={materialsResult.data ?? []} />
         </div>
       </div>
 

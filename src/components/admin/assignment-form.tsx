@@ -43,12 +43,10 @@ export function AssignmentForm({
   locale,
   mode,
   assignment,
-  sessionId,
 }: {
   locale: string;
   mode: "create" | "edit";
   assignment?: AssignmentFormValues;
-  sessionId?: string | null;
 }) {
   const t = useTranslations("admin.assignments");
   const te = useTranslations("admin.assignment");
@@ -67,7 +65,6 @@ export function AssignmentForm({
       <form action={formAction} className="space-y-4 p-5">
         <input type="hidden" name="locale" value={locale} />
         {assignment?.id ? <input type="hidden" name="assignment_id" value={assignment.id} /> : null}
-        {sessionId ? <input type="hidden" name="session_id" value={sessionId} /> : null}
 
         <div>
           <label htmlFor={`${idPrefix}-title`} className={labelClass}>

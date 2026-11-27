@@ -111,7 +111,6 @@ export const assignmentSchema = z.object({
   allowed_file_extensions: z.string().max(1000).default(""),
   allow_any_file_extension: z.boolean().default(true),
   require_feedback_approval: z.boolean().default(true),
-  session_id: z.string().max(64).nullable().optional(),
 });
 
 /** Comma/newline separated staff input → normalized, de-duplicated extensions. */

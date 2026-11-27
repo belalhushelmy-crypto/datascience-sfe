@@ -35,7 +35,6 @@ function parseAssignmentForm(formData: FormData) {
     allowed_file_extensions: String(formData.get("allowed_file_extensions") ?? ""),
     allow_any_file_extension: formData.get("allow_any_file_extension") === "on",
     require_feedback_approval: formData.get("require_feedback_approval") === "on",
-    session_id: String(formData.get("session_id") ?? "") || null,
   });
 }
 
@@ -85,7 +84,6 @@ export async function createAssignmentAction(
       allowed_file_extensions: parseFileExtensions(parsed.data.allowed_file_extensions),
       allow_any_file_extension: parsed.data.allow_any_file_extension,
       require_feedback_approval: parsed.data.require_feedback_approval,
-      session_id: parsed.data.session_id || null,
       created_by: profile?.id ?? null,
     })
     .select("id")

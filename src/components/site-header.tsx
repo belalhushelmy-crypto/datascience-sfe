@@ -74,6 +74,7 @@ export function SiteHeader({ profile }: { profile: Profile }) {
           { href: "/admin", label: t("overview"), icon: Gauge, exact: true },
           { href: "/admin/sessions", label: t("sessions"), icon: CalendarDays },
           { href: "/admin/grading", label: t("grading"), icon: BrainCircuit },
+          { href: "/admin/assignments", label: t("assignments"), icon: FileCode2 },
           { href: "/admin/attendance", label: t("attendance"), icon: UserCheck },
           ...(isAdmin
             ? [
