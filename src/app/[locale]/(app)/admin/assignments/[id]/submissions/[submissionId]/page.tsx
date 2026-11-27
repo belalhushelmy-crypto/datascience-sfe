@@ -8,7 +8,7 @@ import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
 import { Alert, Card, CardHeader, PageHeader, badgeClass } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
 import { colabUrl, fileNameFromPath, isNotebookPath } from "@/lib/colab";
-import { colabDriveUrl, ensureNotebookDriveFile } from "@/lib/drive";
+import { colabGithubUrl, ensureNotebookGithubPath } from "@/lib/notebook-github";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 import { gradingStatus } from "@/lib/grading/service";
@@ -90,12 +90,8 @@ export default async function SubmissionReviewPage({
   let colabHref = signedUrl ? colabUrl(signedUrl) : null;
   if (isFileSubmission && isNotebookPath(data.file_path)) {
     try {
-      const driveFileId = await ensureNotebookDriveFile(
-        data.id,
-        data.file_path!,
-        fileNameFromPath(data.file_path, "notebook.ipynb"),
-      );
-      if (driveFileId) colabHref = colabDriveUrl(driveFileId);
+      const path = await ensureNotebookGithubPath(data.id, data.file_path!);
+      if (path) colabHref = colabGithubUrl(path);
     } catch (error) {
       console.error("[review] notebook Drive upload failed:", error);
     }

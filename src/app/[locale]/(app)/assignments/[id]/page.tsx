@@ -8,7 +8,7 @@ import { CodePanel } from "@/components/code-panel";
 import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
 import { requireProfile } from "@/lib/auth";
 import { colabUrl, isNotebookPath, fileNameFromPath } from "@/lib/colab";
-import { colabDriveUrl, ensureNotebookDriveFile } from "@/lib/drive";
+import { colabGithubUrl, ensureNotebookGithubPath } from "@/lib/notebook-github";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatNumber, stringList } from "@/lib/utils";
@@ -107,12 +107,8 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
   for (const attempt of attempts) {
     if (!attempt.file_path || !isNotebookPath(attempt.file_path) || !signedByPath.has(attempt.file_path)) continue;
     try {
-      const fileId = await ensureNotebookDriveFile(
-        attempt.id,
-        attempt.file_path,
-        fileNameFromPath(attempt.file_path, "notebook.ipynb"),
-      );
-      if (fileId) notebookColabByPath.set(attempt.file_path, colabDriveUrl(fileId));
+      const path = await ensureNotebookGithubPath(attempt.id, attempt.file_path);
+      if (path) notebookColabByPath.set(attempt.file_path, colabGithubUrl(path));
     } catch (error) {
       console.error("[assignment] notebook Drive upload failed:", error);
     }
