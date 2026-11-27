@@ -75,15 +75,12 @@ export function CardHeader({
 }
 
 const ICON_TONES: Record<string, string> = {
-  bronze:
-    "bg-gradient-to-br from-bronze-500/25 to-bronze-400/5 text-bronze-700 ring-1 ring-inset ring-bronze-400/25 dark:text-bronze-300",
-  teal: "bg-gradient-to-br from-teal-500/20 to-teal-400/5 text-teal-700 ring-1 ring-inset ring-teal-400/25 dark:text-teal-300",
-  violet:
-    "bg-gradient-to-br from-violet-500/20 to-violet-400/5 text-violet-700 ring-1 ring-inset ring-violet-400/25 dark:text-violet-300",
-  emerald:
-    "bg-gradient-to-br from-emerald-500/20 to-emerald-400/5 text-emerald-700 ring-1 ring-inset ring-emerald-400/25 dark:text-emerald-300",
-  rose: "bg-gradient-to-br from-rose-500/20 to-rose-400/5 text-rose-700 ring-1 ring-inset ring-rose-400/25 dark:text-rose-300",
-  sky: "bg-gradient-to-br from-sky-500/20 to-sky-400/5 text-sky-700 ring-1 ring-inset ring-sky-400/25 dark:text-sky-300",
+  bronze: "bg-bronze-500/15 text-bronze-700 ring-1 ring-inset ring-bronze-400/25 dark:text-bronze-300",
+  teal: "bg-teal-500/15 text-teal-700 ring-1 ring-inset ring-teal-400/25 dark:text-teal-300",
+  violet: "bg-violet-500/15 text-violet-700 ring-1 ring-inset ring-violet-400/25 dark:text-violet-300",
+  emerald: "bg-emerald-500/15 text-emerald-700 ring-1 ring-inset ring-emerald-400/25 dark:text-emerald-300",
+  rose: "bg-rose-500/15 text-rose-700 ring-1 ring-inset ring-rose-400/25 dark:text-rose-300",
+  sky: "bg-sky-500/15 text-sky-700 ring-1 ring-inset ring-sky-400/25 dark:text-sky-300",
 };
 
 export function StatCard({

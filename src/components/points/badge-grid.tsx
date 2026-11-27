@@ -20,7 +20,7 @@ export function BadgeGrid({ badges }: { badges: BadgeView[] }) {
           className={cn(
             "group relative flex items-start gap-3 overflow-hidden rounded-2xl border p-3.5 transition",
             badge.earned
-              ? "border-amber-400/30 bg-gradient-to-br from-amber-500/[0.12] to-transparent hover:border-amber-400/50"
+              ? "border-amber-400/30 bg-amber-500/10 hover:border-amber-400/50"
               : "border-dashed border-[var(--line-strong)] bg-[var(--glass-inset)]",
           )}
         >

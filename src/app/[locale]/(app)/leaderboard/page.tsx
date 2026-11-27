@@ -233,7 +233,7 @@ export default async function LeaderboardPage({
                       "relative flex flex-col items-center rounded-2xl border px-2 pt-5 pb-3 text-center transition",
                       slot.height,
                       isChampion
-                        ? "border-amber-400/35 bg-gradient-to-b from-amber-500/[0.14] to-transparent"
+                        ? "border-amber-400/35 bg-amber-500/10"
                         : "border-[var(--line)] bg-[var(--glass-inset)]",
                     )}
                     style={{ boxShadow: `0 18px 40px -30px ${slot.glow}` }}

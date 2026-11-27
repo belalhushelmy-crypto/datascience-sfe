@@ -200,8 +200,7 @@
   .glass-card {
     position: relative;
     border: 1px solid var(--line);
-    background:
-      linear-gradient(150deg, var(--glass-strong), var(--glass));
+    background: var(--glass);
     box-shadow:
       inset 0 1px 0 0 rgb(255 255 255 / 0.28),
       var(--shadow-card);
@@ -309,9 +308,7 @@
 
   /* ----------------------------------------------------------------- code */
   .code-panel {
-    background:
-      radial-gradient(40rem 20rem at 100% 0%, rgb(42 89 160 / 0.18), transparent 60%),
-      #07101c;
+    background: #07101c;
     color: #d7e4f2;
     border: 1px solid rgb(148 163 184 / 0.16);
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
