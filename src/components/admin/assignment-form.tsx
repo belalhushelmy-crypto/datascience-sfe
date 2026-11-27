@@ -28,6 +28,7 @@ export type AssignmentFormValues = {
   allowed_submission_types?: "file" | "text" | "both";
   allowed_file_extensions?: string[] | null;
   allow_any_file_extension?: boolean;
+  require_feedback_approval?: boolean;
 };
 
 /** ISO → the `datetime-local` shape in Egypt time (Africa/Cairo). */
@@ -224,6 +225,19 @@ export function AssignmentForm({
           />
           <p className="text-xs text-[var(--ink-muted)]">{t("fileFormatsHint")}</p>
         </div>
+
+        <label className="flex items-start gap-3 rounded-xl border border-[var(--line)] p-3 text-sm ">
+          <input
+            type="checkbox"
+            name="require_feedback_approval"
+            defaultChecked={assignment?.require_feedback_approval ?? true}
+            className="mt-0.5 size-4 rounded border-[var(--line-strong)] text-primary-600 focus:ring-primary-500 "
+          />
+          <span>
+            <span className="block font-medium text-[var(--ink)] ">{t("requireApproval")}</span>
+            <span className="block text-xs text-[var(--ink-muted)]">{t("requireApprovalHint")}</span>
+          </span>
+        </label>
 
         {state.status === "error" ? <Alert>{state.error}</Alert> : null}
         {state.status === "success" ? <Alert tone="success">{state.message}</Alert> : null}

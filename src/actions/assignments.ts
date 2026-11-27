@@ -34,6 +34,7 @@ function parseAssignmentForm(formData: FormData) {
     allow_resubmit: formData.get("allow_resubmit") === "on",
     allowed_file_extensions: String(formData.get("allowed_file_extensions") ?? ""),
     allow_any_file_extension: formData.get("allow_any_file_extension") === "on",
+    require_feedback_approval: formData.get("require_feedback_approval") === "on",
   });
 }
 
@@ -82,6 +83,7 @@ export async function createAssignmentAction(
       allow_resubmit: parsed.data.allow_resubmit,
       allowed_file_extensions: parseFileExtensions(parsed.data.allowed_file_extensions),
       allow_any_file_extension: parsed.data.allow_any_file_extension,
+      require_feedback_approval: parsed.data.require_feedback_approval,
       created_by: profile?.id ?? null,
     })
     .select("id")
@@ -135,6 +137,7 @@ export async function updateAssignmentAction(
       allow_resubmit: parsed.data.allow_resubmit,
       allowed_file_extensions: parseFileExtensions(parsed.data.allowed_file_extensions),
       allow_any_file_extension: parsed.data.allow_any_file_extension,
+      require_feedback_approval: parsed.data.require_feedback_approval,
     })
     .eq("id", assignmentId.data);
 
@@ -214,6 +217,10 @@ export async function reviewSubmissionAction(
     submission_id: formData.get("submission_id"),
     final_score: formData.get("final_score") ?? "",
     status: formData.get("status") ?? "graded",
+    feedback_en: String(formData.get("feedback_en") ?? ""),
+    feedback_ar: String(formData.get("feedback_ar") ?? ""),
+    issues: String(formData.get("issues") ?? ""),
+    approve: formData.get("approve") === "on",
   });
 
   if (!parsed.success) {
@@ -244,7 +251,13 @@ export async function reviewSubmissionAction(
     return { status: "error", error: t("errors.scoreRange", { max: maxScore }) };
   }
 
+  const actor = await getCurrentProfile();
   const now = new Date().toISOString();
+  const issueList = parsed.data.issues
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 6);
   const { error } = await supabase
     .from("submissions")
     .update({
@@ -253,6 +266,12 @@ export async function reviewSubmissionAction(
       graded_by: "teacher",
       graded_at: now,
       reviewed_at: now,
+      ai_feedback: parsed.data.feedback_en || null,
+      ai_feedback_ar: parsed.data.feedback_ar || null,
+      ai_issues: issueList,
+      ...(parsed.data.approve
+        ? { feedback_approved_at: now, feedback_approved_by: actor?.id ?? null }
+        : {}),
     })
     .eq("id", submission.id);
 

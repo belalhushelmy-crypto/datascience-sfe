@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { AssignmentForm } from "@/components/admin/assignment-form";
+import { FormDialog } from "@/components/admin/form-dialog";
 import { CsvDownloadButton } from "@/components/admin/csv-download-button";
 import { DeleteAssignmentForm } from "@/components/admin/delete-assignment-form";
 import { GradePendingButton } from "@/components/admin/grade-pending-button";
@@ -30,6 +31,7 @@ type AssignmentRow = {
   allowed_submission_types: "file" | "text" | "both";
   allowed_file_extensions: string[] | null;
   allow_any_file_extension: boolean | null;
+  require_feedback_approval: boolean | null;
 };
 
 type SubmissionRow = {
@@ -67,7 +69,7 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
     supabase
       .from("assignments")
       .select(
-        "id, title, description, rubric, expected_output, deadline, max_score, allow_resubmit, similarity_checked_at, allowed_submission_types, allowed_file_extensions, allow_any_file_extension",
+        "id, title, description, rubric, expected_output, deadline, max_score, allow_resubmit, similarity_checked_at, allowed_submission_types, allowed_file_extensions, allow_any_file_extension, require_feedback_approval",
       )
       .eq("id", parsedId.data)
       .maybeSingle()
@@ -249,23 +251,26 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-2">
-        <AssignmentForm
-          locale={locale}
-          mode="edit"
-          assignment={{
-            id: assignment.id,
-            title: assignment.title,
-            description: assignment.description,
-            rubric: assignment.rubric,
-            expected_output: assignment.expected_output,
-            max_score: assignment.max_score,
-            deadline: assignment.deadline,
-            allow_resubmit: assignment.allow_resubmit,
-            allowed_submission_types: assignment.allowed_submission_types,
-            allowed_file_extensions: assignment.allowed_file_extensions,
-            allow_any_file_extension: assignment.allow_any_file_extension ?? true,
-          }}
-        />
+        <FormDialog trigger={t("editAssignment")} title={t("detailsTitle")} description={t("detailsSubtitle")} wide>
+          <AssignmentForm
+            locale={locale}
+            mode="edit"
+            assignment={{
+              id: assignment.id,
+              title: assignment.title,
+              description: assignment.description,
+              rubric: assignment.rubric,
+              expected_output: assignment.expected_output,
+              max_score: assignment.max_score,
+              deadline: assignment.deadline,
+              allow_resubmit: assignment.allow_resubmit,
+              allowed_submission_types: assignment.allowed_submission_types,
+              allowed_file_extensions: assignment.allowed_file_extensions,
+              allow_any_file_extension: assignment.allow_any_file_extension ?? true,
+              require_feedback_approval: assignment.require_feedback_approval ?? true,
+            }}
+          />
+        </FormDialog>
 
         <div className="space-y-6">
           <Card>

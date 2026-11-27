@@ -17,6 +17,11 @@ export function ReviewForm({
   aiScore,
   finalScore,
   status,
+  feedbackEn,
+  feedbackAr,
+  issues,
+  approved,
+  requireApproval,
 }: {
   locale: string;
   submissionId: string;
@@ -24,6 +29,11 @@ export function ReviewForm({
   aiScore: number | null;
   finalScore: number | null;
   status: SubmissionStatus;
+  feedbackEn: string | null;
+  feedbackAr: string | null;
+  issues: string[];
+  approved: boolean;
+  requireApproval: boolean;
 }) {
   const t = useTranslations("admin.review");
   const [state, formAction] = useActionState(reviewSubmissionAction, initialState);
@@ -84,6 +94,61 @@ export function ReviewForm({
             <option value="flagged">{t("statusFlagged")}</option>
           </select>
           <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("statusHint")}</p>
+        </div>
+
+        <div className="space-y-3 border-t border-[var(--line)] pt-4">
+          <div>
+            <label htmlFor="review-feedback-en" className={labelClass}>
+              {t("feedbackEnLabel")}
+            </label>
+            <textarea
+              id="review-feedback-en"
+              name="feedback_en"
+              rows={3}
+              defaultValue={feedbackEn ?? ""}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="review-feedback-ar" className={labelClass}>
+              {t("feedbackArLabel")}
+            </label>
+            <textarea
+              id="review-feedback-ar"
+              name="feedback_ar"
+              rows={3}
+              dir="rtl"
+              defaultValue={feedbackAr ?? ""}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="review-issues" className={labelClass}>
+              {t("issuesLabel")}
+            </label>
+            <textarea
+              id="review-issues"
+              name="issues"
+              rows={3}
+              defaultValue={issues.join("\n")}
+              className={inputClass}
+            />
+            <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("issuesHint")}</p>
+          </div>
+          {requireApproval ? (
+            <label className="flex items-start gap-3 rounded-xl border border-[var(--line)] p-3 text-sm">
+              <input
+                type="checkbox"
+                name="approve"
+                defaultChecked={approved}
+                className="mt-0.5 size-4 rounded border-[var(--line-strong)] text-primary-600 focus:ring-primary-500"
+              />
+              <span>
+                <span className="block font-medium text-[var(--ink)]">{t("approveLabel")}</span>
+                <span className="block text-xs text-[var(--ink-muted)]">{t("approveHint")}</span>
+              </span>
+            </label>
+          ) : null}
         </div>
 
         {state.status === "error" ? <Alert>{state.error}</Alert> : null}

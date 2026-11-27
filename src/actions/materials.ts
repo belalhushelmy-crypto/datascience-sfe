@@ -64,10 +64,6 @@ export async function addMaterialAction(
   }
 
   const type = String(formData.get("type") ?? "").trim();
-  const title = String(formData.get("title") ?? "").trim();
-  if (!title) {
-    return { status: "error", error: t("errors.invalid") };
-  }
   if (!ALLOWED_TYPES.includes(type)) {
     return { status: "error", error: t("errors.invalid") };
   }
@@ -81,6 +77,16 @@ export async function addMaterialAction(
     uploadPath.startsWith(`${sessionId.data}/`) && !uploadPath.includes("..")
       ? uploadPath
       : null;
+
+  // File materials derive their title from the uploaded filename; staff do not
+  // have to type one.
+  const autoTitle = filePath
+    ? (filePath.split("/").pop() ?? "").replace(/^\d+-[0-9a-f]{8}-/i, "")
+    : "";
+  const title = String(formData.get("title") ?? "").trim() || autoTitle;
+  if (!title) {
+    return { status: "error", error: t("errors.invalid") };
+  }
 
   if (type === "text" || type === "code") {
     if (!content) {

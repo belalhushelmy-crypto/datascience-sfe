@@ -34,6 +34,7 @@ export function MaterialsPanel({
   const t = useTranslations("admin.session");
   const [state, formAction] = useActionState(submitMaterial, initialState);
   const [type, setType] = useState<string>("text");
+  const [title, setTitle] = useState("");
 
   const needsFile = type !== "text" && type !== "code";
   const needsContent = type === "text" || type === "code";
@@ -76,6 +77,7 @@ export function MaterialsPanel({
 
       formData.set("file_path", upload.path);
       formData.set("mime_type", file.type || "");
+      formData.set("title", file.name);
       formData.delete("file");
     }
 
@@ -114,7 +116,17 @@ export function MaterialsPanel({
               <label htmlFor="material_title" className={labelClass}>
                 {t("materialTitle")}
               </label>
-              <input id="material_title" name="title" type="text" required maxLength={120} className={inputClass} />
+              <input
+                id="material_title"
+                name="title"
+                type="text"
+                required={!needsFile}
+                maxLength={120}
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                className={inputClass}
+              />
+              {needsFile ? <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("materialTitleAuto")}</p> : null}
             </div>
           </div>
 
@@ -147,7 +159,14 @@ export function MaterialsPanel({
               <label htmlFor="material_file" className={labelClass}>
                 {t("materialFile")}
               </label>
-              <input id="material_file" name="file" type="file" required className={inputClass} />
+              <input
+                id="material_file"
+                name="file"
+                type="file"
+                required
+                onChange={(event) => setTitle(event.target.files?.[0]?.name ?? "")}
+                className={inputClass}
+              />
             </div>
           ) : null}
 

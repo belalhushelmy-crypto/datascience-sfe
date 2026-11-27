@@ -31,6 +31,7 @@ type AssignmentRow = {
   allowed_submission_types: "file" | "text" | "both";
   allowed_file_extensions: string[] | null;
   allow_any_file_extension: boolean | null;
+  require_feedback_approval: boolean | null;
 };
 
 type AttemptRow = {
@@ -44,6 +45,7 @@ type AttemptRow = {
   ai_model: string | null;
   ai_rubric: unknown;
   ai_graded_at: string | null;
+  feedback_approved_at: string | null;
   final_score: number | string | null;
   status: SubmissionStatus;
   created_at: string;
@@ -70,7 +72,7 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
   const { data: assignment, error: assignmentError } = await supabase
     .from("assignments")
     .select(
-      "id, title, description, rubric, expected_output, deadline, max_score, allow_resubmit, allowed_submission_types, allowed_file_extensions, allow_any_file_extension",
+      "id, title, description, rubric, expected_output, deadline, max_score, allow_resubmit, allowed_submission_types, allowed_file_extensions, allow_any_file_extension, require_feedback_approval",
     )
     .eq("id", parsedId.data)
     .maybeSingle()
@@ -85,7 +87,7 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
   const { data: attemptsData, error: attemptsError } = await supabase
     .from("submissions")
     .select(
-      "id, file_path, code_text, ai_score, ai_feedback, ai_feedback_ar, ai_issues, ai_model, ai_rubric, ai_graded_at, final_score, status, created_at",
+      "id, file_path, code_text, ai_score, ai_feedback, ai_feedback_ar, ai_issues, ai_model, ai_rubric, ai_graded_at, feedback_approved_at, final_score, status, created_at",
     )
     .eq("assignment_id", assignment.id)
     .eq("student_id", profile.id)
@@ -256,6 +258,8 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
               const feedback = locale === "ar" ? (attempt.ai_feedback_ar ?? attempt.ai_feedback) : attempt.ai_feedback;
               const issues = stringList(attempt.ai_issues);
               const signedUrl = signedByPath.get(attempt.file_path) ?? null;
+              const feedbackVisible =
+                !assignment.require_feedback_approval || Boolean(attempt.feedback_approved_at);
 
               return (
                 <li key={attempt.id} className="space-y-3 p-5">
@@ -280,9 +284,11 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
                     </div>
                     <div className="flex items-center gap-3">
                       <span className={badgeClass}>
-                        {score === null
-                          ? t("noScoreYet")
-                          : `${formatNumber(Number(score), locale, 1)} / ${formatNumber(maxScore, locale)}`}
+                        {!feedbackVisible
+                          ? t("awaitingApproval")
+                          : score === null
+                            ? t("noScoreYet")
+                            : `${formatNumber(Number(score), locale, 1)} / ${formatNumber(maxScore, locale)}`}
                       </span>
                       <span className="text-xs text-[var(--ink-muted)]">
                         {formatDate(attempt.created_at, locale, {
@@ -296,7 +302,13 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
                     </div>
                   </div>
 
-                  {feedback ? (
+                  {!feedbackVisible ? (
+                    <p className="rounded-xl border border-[var(--line)] bg-[var(--glass-inset)] px-3 py-2 text-xs text-[var(--ink-muted)]">
+                      {t("awaitingApprovalHint")}
+                    </p>
+                  ) : null}
+
+                  {feedbackVisible && feedback ? (
                     <div>
                       <p className="caption-code mb-2">{t("aiFeedback")}</p>
                       <CompilerMessage tone="info" label="ai.feedback">
@@ -305,14 +317,14 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
                     </div>
                   ) : null}
 
-                  {issues.length > 0 ? (
+                  {feedbackVisible && issues.length > 0 ? (
                     <div>
                       <p className="caption-code mb-2">{t("issues")}</p>
                       <DiagnosticList items={issues} label="diagnostics" empty={t("issues")} />
                     </div>
                   ) : null}
 
-                  {Array.isArray(attempt.ai_rubric) && attempt.ai_rubric.length > 0 ? (
+                  {feedbackVisible && Array.isArray(attempt.ai_rubric) && attempt.ai_rubric.length > 0 ? (
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-muted)]">
                         {t("rubricScores")}

@@ -300,7 +300,19 @@ export async function changeUserRoleAction(
     return { status: "error", error: t("errors.invalid") };
   }
 
+  const actor = await getCurrentProfile();
   const admin = createAdminClient();
+  const { data: target } = await admin
+    .from("profiles")
+    .select("role")
+    .eq("id", studentId)
+    .maybeSingle()
+    .returns<{ role: string } | null>();
+
+  // Teachers may not change an admin's role, and may not promote anyone to admin.
+  if (actor?.role !== "admin" && (target?.role === "admin" || newRole === "admin")) {
+    return { status: "error", error: t("errors.forbidden") };
+  }
   const { error } = await admin
     .from("profiles")
     .update({ role: newRole })

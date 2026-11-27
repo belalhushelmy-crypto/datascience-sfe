@@ -109,6 +109,7 @@ export const assignmentSchema = z.object({
   allowed_submission_types: z.enum(["file", "text", "both"]).default("both"),
   allowed_file_extensions: z.string().max(1000).default(""),
   allow_any_file_extension: z.boolean().default(true),
+  require_feedback_approval: z.boolean().default(true),
 });
 
 /** Comma/newline separated staff input → normalized, de-duplicated extensions. */
@@ -150,6 +151,10 @@ export const submissionReviewSchema = z.object({
   submission_id: idSchema,
   final_score: scoreInputSchema,
   status: z.enum(["graded", "flagged"]),
+  feedback_en: z.string().max(4000).optional().default(""),
+  feedback_ar: z.string().max(4000).optional().default(""),
+  issues: z.string().max(4000).optional().default(""),
+  approve: z.boolean().default(false),
 });
 
 export const gradingRequestSchema = z.object({

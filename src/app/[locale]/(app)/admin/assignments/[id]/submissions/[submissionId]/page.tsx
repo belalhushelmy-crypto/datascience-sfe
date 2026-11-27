@@ -31,11 +31,17 @@ type ReviewRow = {
   ai_issues: unknown;
   ai_model: string | null;
   ai_graded_at: string | null;
+  feedback_approved_at: string | null;
   final_score: number | string | null;
   status: SubmissionStatus;
   created_at: string;
   grading_error: string | null;
-  assignments: { id: string; title: string; max_score: number | string } | null;
+  assignments: {
+    id: string;
+    title: string;
+    max_score: number | string;
+    require_feedback_approval: boolean | null;
+  } | null;
   profiles: {
     full_name: string;
     username: string;
@@ -65,7 +71,7 @@ export default async function SubmissionReviewPage({
   const { data, error } = await supabase
     .from("submissions")
     .select(
-      "id, assignment_id, file_path, code_text, submission_type, ai_score, ai_feedback, ai_feedback_ar, ai_issues, ai_model, ai_graded_at, final_score, status, created_at, grading_error, assignments!submissions_assignment_id_fkey(id, title, max_score), profiles!submissions_student_id_fkey(full_name, username, student_code)",
+      "id, assignment_id, file_path, code_text, submission_type, ai_score, ai_feedback, ai_feedback_ar, ai_issues, ai_model, ai_graded_at, feedback_approved_at, final_score, status, created_at, grading_error, assignments!submissions_assignment_id_fkey(id, title, max_score, require_feedback_approval), profiles!submissions_student_id_fkey(full_name, username, student_code)",
     )
     .eq("id", parsedSubmissionId.data)
     .eq("assignment_id", assignmentId.data)
@@ -233,6 +239,15 @@ export default async function SubmissionReviewPage({
                     })
                   : undefined
               }
+              action={
+                (data.assignments?.require_feedback_approval ?? true)
+                  ? (
+                      <span className={badgeClass}>
+                        {data.feedback_approved_at ? t("feedbackApproved") : t("feedbackPending")}
+                      </span>
+                    )
+                  : undefined
+              }
             />
             <div className="space-y-4 p-5">
               {data.grading_error ? (
@@ -277,6 +292,11 @@ export default async function SubmissionReviewPage({
             aiScore={aiScore}
             finalScore={finalScore}
             status={data.status}
+            feedbackEn={data.ai_feedback}
+            feedbackAr={data.ai_feedback_ar}
+            issues={issues}
+            approved={Boolean(data.feedback_approved_at)}
+            requireApproval={data.assignments?.require_feedback_approval ?? true}
           />
 
           <Card>
