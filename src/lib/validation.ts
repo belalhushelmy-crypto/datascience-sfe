@@ -101,7 +101,7 @@ export const textSubmissionSchema = z.object({
 
 export const assignmentSchema = z.object({
   title: z.string().trim().min(3).max(160),
-  description: z.string().trim().max(4000),
+  description: z.string().trim().max(4000).optional().default(""),
   rubric: z.string().trim().max(4000),
   expected_output: z.string().trim().max(2000),
   max_score: z.coerce.number().min(1).max(1000),

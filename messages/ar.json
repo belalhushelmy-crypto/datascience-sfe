@@ -574,7 +574,7 @@
       "createSubtitle": "اشرح المطلوب ومعايير التصحيح التي سيستخدمها الذكاء الاصطناعي.",
       "titleLabel": "العنوان",
       "titlePlaceholder": "الواجب 3 · الحلقات",
-      "descriptionLabel": "المطلوب",
+      "descriptionLabel": "المطلوب (اختياري)",
       "descriptionPlaceholder": "ماذا يجب أن يفعل البرنامج؟",
       "rubricLabel": "معايير التصحيح",
       "rubricPlaceholder": "40% صحة الحل، 30% الوضوح، 30% الحالات الحدية",

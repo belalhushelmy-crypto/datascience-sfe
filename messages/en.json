@@ -574,7 +574,7 @@
       "createSubtitle": "Describe the task and the rubric the AI should grade against.",
       "titleLabel": "Title",
       "titlePlaceholder": "Assignment 3 · Loops",
-      "descriptionLabel": "Task",
+      "descriptionLabel": "Task (optional)",
       "descriptionPlaceholder": "What should the program do?",
       "rubricLabel": "Rubric",
       "rubricPlaceholder": "40% correctness, 30% clarity, 30% edge cases",
