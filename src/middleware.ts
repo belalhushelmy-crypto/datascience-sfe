@@ -135,6 +135,15 @@ export async function middleware(request: NextRequest) {
     );
   }
 
+  // Leaderboard is the same podium view for admin, teacher, HR and students.
+  const isStaff = role === "admin" || role === "teacher" || role === "hr";
+  if (path === "/admin/points" && isStaff && role !== "admin") {
+    return copyCookies(
+      NextResponse.redirect(new URL(`/${locale}/leaderboard`, request.url)),
+      response,
+    );
+  }
+
   // Require email verification for student pages (except @cshub.local legacy accounts)
   if (role === "student" && !isLogin && !isSignup && !isVerifyEmail) {
     if (!verified) {
