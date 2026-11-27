@@ -714,6 +714,7 @@
       "codeTitle": "Submitted code",
       "download": "Download file",
       "openInColab": "Open in Colab",
+      "notebookHint": "Notebook file kept as an .ipynb file. Use the Colab link to open and run it.",
       "aiTitle": "AI grading",
       "aiSubtitle": "{model} · {date}",
       "aiMissing": "The AI has not graded this submission yet.",

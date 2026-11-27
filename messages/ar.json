@@ -714,6 +714,7 @@
       "codeTitle": "الكود المُرسل",
       "download": "تنزيل الملف",
       "openInColab": "فتح في Colab",
+      "notebookHint": "يُحتفظ بالدفتر كملف .ipynb. استخدم رابط Colab لفتحه وتشغيله.",
       "aiTitle": "تصحيح الذكاء الاصطناعي",
       "aiSubtitle": "{model} · {date}",
       "aiMissing": "لم يصحح الذكاء الاصطناعي هذه المحاولة بعد.",

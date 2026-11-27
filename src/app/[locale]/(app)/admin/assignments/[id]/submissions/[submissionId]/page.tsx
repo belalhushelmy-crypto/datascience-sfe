@@ -8,6 +8,7 @@ import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
 import { Alert, Card, CardHeader, PageHeader, badgeClass } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
 import { colabUrl, fileNameFromPath, isNotebookPath } from "@/lib/colab";
+import { colabDriveUrl, ensureNotebookDriveFile } from "@/lib/drive";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 import { gradingStatus } from "@/lib/grading/service";
@@ -86,6 +87,20 @@ export default async function SubmissionReviewPage({
     : { data: { signedUrl: null } as any, error: null };
   const signedUrl = signedResult.data?.signedUrl ?? null;
 
+  let colabHref = signedUrl ? colabUrl(signedUrl) : null;
+  if (isFileSubmission && isNotebookPath(data.file_path)) {
+    try {
+      const driveFileId = await ensureNotebookDriveFile(
+        data.id,
+        data.file_path!,
+        fileNameFromPath(data.file_path, "notebook.ipynb"),
+      );
+      if (driveFileId) colabHref = colabDriveUrl(driveFileId);
+    } catch (error) {
+      console.error("[review] notebook Drive upload failed:", error);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -160,7 +175,7 @@ export default async function SubmissionReviewPage({
                   <span className="flex flex-wrap items-center justify-end gap-3">
                     {isNotebookPath(data.file_path) ? (
                       <a
-                        href={colabUrl(signedUrl)}
+                        href={colabHref ?? "#"}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-semibold text-primary-600 transition hover:text-primary-500 dark:text-primary-400"
@@ -179,12 +194,22 @@ export default async function SubmissionReviewPage({
                 ) : null
               }
             />
-            <CodePanel
-              code={data.code_text || "No content"}
-              title={fileNameFromPath(data.file_path, `${student?.student_code ?? "submission"}.txt`)}
-              maxHeight="34rem"
-              className="rounded-none border-0"
-            />
+            {isNotebookPath(data.file_path) ? (
+              <div className="p-6">
+                <p className="caption-code">jupyter notebook</p>
+                <p className="mt-2 break-all font-mono text-sm text-[var(--ink)]">
+                  {fileNameFromPath(data.file_path, "notebook.ipynb")}
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-[var(--ink-muted)]">{t("notebookHint")}</p>
+              </div>
+            ) : (
+              <CodePanel
+                code={data.code_text || "No content"}
+                title={fileNameFromPath(data.file_path, `${student?.student_code ?? "submission"}.txt`)}
+                maxHeight="34rem"
+                className="rounded-none border-0"
+              />
+            )}
           </Card>
 
           <Card>

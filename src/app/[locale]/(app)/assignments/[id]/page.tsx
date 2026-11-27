@@ -8,6 +8,7 @@ import { CodePanel } from "@/components/code-panel";
 import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
 import { requireProfile } from "@/lib/auth";
 import { colabUrl, isNotebookPath, fileNameFromPath } from "@/lib/colab";
+import { colabDriveUrl, ensureNotebookDriveFile } from "@/lib/drive";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatNumber, stringList } from "@/lib/utils";
@@ -101,6 +102,21 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
       ? await supabase.storage.from("submissions").createSignedUrls(paths, 600)
       : { data: null, error: null };
   const signedByPath = new Map((signedResult.data ?? []).map((row) => [row.path, row.signedUrl]));
+
+  const notebookColabByPath = new Map<string, string>();
+  for (const attempt of attempts) {
+    if (!attempt.file_path || !isNotebookPath(attempt.file_path) || !signedByPath.has(attempt.file_path)) continue;
+    try {
+      const fileId = await ensureNotebookDriveFile(
+        attempt.id,
+        attempt.file_path,
+        fileNameFromPath(attempt.file_path, "notebook.ipynb"),
+      );
+      if (fileId) notebookColabByPath.set(attempt.file_path, colabDriveUrl(fileId));
+    } catch (error) {
+      console.error("[assignment] notebook Drive upload failed:", error);
+    }
+  }
 
   let bestPercent: number | null = null;
   for (const attempt of attempts) {
@@ -325,17 +341,27 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
                       {t("showCode")}
                     </summary>
                     <div className="border-t border-[var(--line)] p-3">
-                      <CodePanel
-                        code={attempt.code_text || "No content"}
-                        title={fileNameFromPath(attempt.file_path, `attempt-${attemptNumber}.txt`)}
-                        maxHeight="20rem"
-                        showCopy={false}
-                      />
+                      {isNotebookPath(attempt.file_path) ? (
+                        <div className="rounded-xl border border-[var(--line)] bg-[var(--glass-inset)] p-4">
+                          <p className="caption-code">jupyter notebook</p>
+                          <p className="mt-1 break-all font-mono text-xs text-[var(--ink)]">
+                            {fileNameFromPath(attempt.file_path, "notebook.ipynb")}
+                          </p>
+                          <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("notebookHint")}</p>
+                        </div>
+                      ) : (
+                        <CodePanel
+                          code={attempt.code_text || "No content"}
+                          title={fileNameFromPath(attempt.file_path, `attempt-${attemptNumber}.txt`)}
+                          maxHeight="20rem"
+                          showCopy={false}
+                        />
+                      )}
                       {signedUrl ? (
                         <span className="mt-2 flex flex-wrap items-center gap-4">
                           {isNotebookPath(attempt.file_path) ? (
                             <a
-                              href={colabUrl(signedUrl)}
+                              href={notebookColabByPath.get(attempt.file_path) ?? (signedUrl ? colabUrl(signedUrl) : "#")}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
