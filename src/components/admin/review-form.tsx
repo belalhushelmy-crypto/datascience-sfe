@@ -124,20 +124,10 @@ export function ReviewForm({
             />
           </div>
           <div>
-            <label htmlFor="review-issues" className={labelClass}>
-              {t("issuesLabel")}
-            </label>
-            <textarea
-              id="review-issues"
-              name="issues"
-              rows={3}
-              defaultValue={issues.join("\n")}
-              className={inputClass}
-            />
-            <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("issuesHint")}</p>
-            <div className="mt-3">
-              <DiagnosticList items={issues} label={t("issuesPreview")} empty={t("noIssues")} />
-            </div>
+            <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-muted)]">
+              {t("issuesPreview")}
+            </p>
+            <DiagnosticList items={issues} label={t("issuesPreview")} empty={t("noIssues")} />
           </div>
           {requireApproval ? (
             <label className="flex items-start gap-3 rounded-xl border border-[var(--line)] p-3 text-sm">
