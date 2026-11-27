@@ -45,7 +45,7 @@ export default async function AdminGradingPage({ params }: { params: Promise<{ l
   let request = supabase
     .from("submissions")
     .select(
-      "id, assignment_id, student_id, created_at, status, final_score, ai_score, assignments(title, max_score), profiles(full_name, username, student_code)",
+      "id, assignment_id, student_id, created_at, status, final_score, ai_score, assignments!submissions_assignment_id_fkey(title, max_score), profiles!submissions_student_id_fkey(full_name, username, student_code)",
     )
     .order("created_at", { ascending: false })
     .limit(200);

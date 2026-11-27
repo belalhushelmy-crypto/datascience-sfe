@@ -25,6 +25,7 @@ export const createStudentSchema = z.object({
   username: usernameSchema,
   full_name: fullNameSchema,
   password: passwordSchema,
+  email: z.string().trim().email().max(120).optional(),
 });
 
 export const csvStudentSchema = z.object({

@@ -48,12 +48,13 @@ export async function createStudentAction(
     username: normalizeUsername(String(formData.get("username") ?? "")),
     full_name: String(formData.get("full_name") ?? "").trim(),
     password: String(formData.get("password") ?? ""),
+    email: String(formData.get("email") ?? "").trim() || undefined,
   });
 
   if (!parsed.success) {
     const field = fieldFromZodError(parsed.error);
     const key =
-      field === "username" || field === "full_name" || field === "password"
+      field === "username" || field === "full_name" || field === "password" || field === "email"
         ? field
         : "invalid";
     return { status: "error", error: t(`errors.${key}`) };

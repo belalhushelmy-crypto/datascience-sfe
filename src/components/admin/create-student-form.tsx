@@ -70,6 +70,23 @@ export function CreateStudentForm({ locale }: { locale: string }) {
         </div>
 
         <div>
+          <label htmlFor="new_email" className={labelClass}>
+            {t("email")}
+          </label>
+          <input
+            id="new_email"
+            name="email"
+            type="email"
+            dir="ltr"
+            maxLength={120}
+            autoComplete="off"
+            placeholder={t("emailPlaceholder")}
+            className={inputClass}
+          />
+          <p className="mt-1.5 text-xs text-[var(--ink-muted)]">{t("emailHint")}</p>
+        </div>
+
+        <div>
           <label htmlFor="new_password" className={labelClass}>
             {t("password")}
           </label>

@@ -9,11 +9,12 @@ export type CreateStudentInput = {
   username: string;
   full_name: string;
   password: string;
+  email?: string | null;
 };
 
 export type CreateStudentResult =
   | { ok: true; student: StudentAccountSummary; password: string }
-  | { ok: false; reason: "usernameTaken" | "createFailed" };
+  | { ok: false; reason: "usernameTaken" | "emailTaken" | "createFailed" };
 
 /** URL-safe random password with plenty of entropy (default 12 chars). */
 export function generatePassword(length = 12): string {
@@ -47,8 +48,19 @@ export async function createStudentAccount(
   }
   if (existing) return { ok: false, reason: "usernameTaken" };
 
+  const email = input.email?.trim().toLowerCase() || `${username}@cshub.local`;
+
+  if (input.email) {
+    const { data: existingEmail } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+    if (existingEmail) return { ok: false, reason: "emailTaken" };
+  }
+
   const { data, error } = await admin.auth.admin.createUser({
-    email: `${username}@cshub.local`,
+    email,
     password: input.password,
     email_confirm: true,
     app_metadata: { role: "student" },
