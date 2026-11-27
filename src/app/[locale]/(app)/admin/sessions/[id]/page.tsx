@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { AssignmentForm } from "@/components/admin/assignment-form";
 import { AttendanceForm } from "@/components/admin/attendance-form";
+import { FormDialog } from "@/components/admin/form-dialog";
 import { CsvDownloadButton } from "@/components/admin/csv-download-button";
 import { DeleteSessionForm } from "@/components/admin/delete-session-form";
 import { EditSessionForm } from "@/components/admin/edit-session-form";
@@ -61,6 +63,7 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
   if (!sessionId.success) notFound();
 
   const t = await getTranslations("admin.session");
+  const ta = await getTranslations("admin.assignments");
   const tc = await getTranslations("common");
 
   const supabase = await createClient();
@@ -87,6 +90,7 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
     supabase
       .from("assignments")
       .select("id, title, deadline, max_score")
+      .eq("session_id", sessionId.data)
       .order("created_at", { ascending: false })
       .limit(50)
       .returns<AssessmentRow[]>(),
@@ -135,9 +139,14 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
             title={t("assessmentsTitle")}
             description={t("assessmentsSubtitle")}
             action={
-              <Link href="/admin/assignments" className={buttonSecondary}>
-                {t("newTask")}
-              </Link>
+              <FormDialog
+                trigger={t("newTask")}
+                title={ta("createTitle")}
+                description={ta("createSubtitle")}
+                wide
+              >
+                <AssignmentForm locale={locale} mode="create" sessionId={session.id} />
+              </FormDialog>
             }
           />
           {assessments.length === 0 ? (

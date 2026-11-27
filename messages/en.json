@@ -46,7 +46,7 @@
     "leaderboard": "Leaderboard",
     "points": "Points",
     "analytics": "Analytics",
-    "grading": "AI grading",
+    "grading": "Grading",
     "announcements": "Announcements",
     "warnings": "Warnings",
     "accountMenu": "Account menu",
@@ -875,6 +875,21 @@
         "invalidPoints": "Enter a valid point value between -100000 and 100000.",
         "pointsSaveFailed": "Could not save the points. Please try again."
       }
+    },
+    "gradingQueue": {
+      "title": "Grading",
+      "subtitle": "Review submissions in your teaching scope, apply rubrics, and publish grades.",
+      "settings": "AI settings",
+      "loadError": "Could not load submissions.",
+      "searchPlaceholder": "Student or task",
+      "allStatuses": "All statuses",
+      "colStudent": "Student",
+      "colTask": "Task",
+      "colStatus": "Status",
+      "colScore": "Score",
+      "review": "Review",
+      "attempt": "Attempt",
+      "noResults": "No submissions match these filters."
     },
     "grading": {
       "title": "AI grading settings",

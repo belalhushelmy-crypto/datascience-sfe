@@ -46,7 +46,7 @@
     "leaderboard": "لوحة الصدارة",
     "points": "النقاط",
     "analytics": "التحليلات",
-    "grading": "تصحيح AI",
+    "grading": "التصحيح",
     "announcements": "الإعلانات",
     "warnings": "تحذيرات",
     "accountMenu": "قائمة الحساب",
@@ -875,6 +875,21 @@
         "invalidPoints": "أدخل قيمة نقاط صالحة بين -100000 و 100000.",
         "pointsSaveFailed": "تعذّر حفظ النقاط. حاول مرة أخرى."
       }
+    },
+    "gradingQueue": {
+      "title": "التصحيح",
+      "subtitle": "راجع التسليمات ضمن نطاقك التدريسي، وطبّق المعايير، وانشر الدرجات.",
+      "settings": "إعدادات الذكاء",
+      "loadError": "تعذّر تحميل التسليمات.",
+      "searchPlaceholder": "الطالب أو المهمة",
+      "allStatuses": "كل الحالات",
+      "colStudent": "الطالب",
+      "colTask": "المهمة",
+      "colStatus": "الحالة",
+      "colScore": "الدرجة",
+      "review": "مراجعة",
+      "attempt": "محاولة",
+      "noResults": "لا توجد تسليمات مطابقة."
     },
     "grading": {
       "title": "إعدادات تصحيح AI",
