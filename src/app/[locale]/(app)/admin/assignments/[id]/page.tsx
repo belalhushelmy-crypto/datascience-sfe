@@ -251,6 +251,7 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
         <FormDialog trigger={t("editAssignment")} title={t("detailsTitle")} description={t("detailsSubtitle")} wide>
           <AssignmentForm
             locale={locale}
@@ -271,6 +272,171 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
             }}
           />
         </FormDialog>
+
+        <Card>
+          <CardHeader
+            title={t("submissionsTitle")}
+            action={
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs text-[var(--ink-muted)]">
+                  {t("submissionsCount", {
+                    count: formatNumber(latestSubmissions.length, locale),
+                  })}
+                </span>
+                <CsvDownloadButton locale={locale} kind="assignment" id={assignment.id} label={ta("exportGrades")} />
+              </div>
+            }
+          />
+
+          {latestSubmissions.length === 0 ? (
+            <div className="p-5">
+              <EmptyState title={t("noSubmissions")} description={t("noSubmissionsHint")} />
+            </div>
+          ) : (
+            <div className="space-y-6 p-5">
+              {(() => {
+                const renderRow = (row: SubmissionRow, showLateBadge: boolean) => {
+                  const student = row.profiles;
+                  const ai = row.ai_score === null ? null : Number(row.ai_score);
+                  const final = row.final_score === null ? null : Number(row.final_score);
+                  const late = isLate(row);
+                  return (
+                    <tr key={row.id}>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-50 text-xs font-semibold text-primary-700 dark:bg-primary-500/10 dark:text-primary-300">
+                            {initials(student?.full_name ?? "?")}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-[var(--ink)]">{student?.full_name ?? "—"}</p>
+                            <p className="truncate text-xs text-[var(--ink-muted)]">
+                              {student ? `@${student.username}` : ""}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-[var(--ink-soft)]">
+                        {t("attemptOf", {
+                          current: attemptNumber.get(row.id) ?? 1,
+                          total: byStudent.get(row.student_id)?.length ?? 1,
+                        })}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-xs text-[var(--ink-muted)]">
+                        <div className="flex flex-col gap-0.5">
+                          <span>
+                            {formatDate(row.created_at, locale, {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })}
+                          </span>
+                          {late ? (
+                            <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                              {formatLateBy(row)}
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5">
+                        {ai === null ? (
+                          <span className="text-[var(--ink-muted)]">—</span>
+                        ) : (
+                          <span className="text-[var(--ink-soft)]">{formatNumber(ai, locale, 1)}</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5">
+                        {final === null ? (
+                          <span className="text-[var(--ink-muted)]">—</span>
+                        ) : (
+                          <span className="font-medium text-[var(--ink)]">{formatNumber(final, locale, 1)}</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={
+                              row.status === "graded"
+                                ? "rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                : row.status === "flagged"
+                                  ? "rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                                  : "rounded-full bg-[var(--glass-inset)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--ink-soft)] "
+                            }
+                          >
+                            {ts(row.status)}
+                          </span>
+                          {showLateBadge ? (
+                            <span
+                              className={
+                                late
+                                  ? "rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                                  : "rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                              }
+                            >
+                              {late ? t("lateBadge") : t("onTimeBadge")}
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-end">
+                        <Link
+                          href={`/admin/assignments/${assignment.id}/submissions/${row.id}`}
+                          className={`${buttonSecondary} px-3 py-1.5 text-xs`}
+                        >
+                          {t("review")}
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                };
+
+                const tableHead = (
+                  <thead className="bg-[var(--glass-inset)] text-xs uppercase tracking-wide text-[var(--ink-muted)] ">
+                    <tr>
+                      <th scope="col" className="px-5 py-3 text-start font-medium">{t("colStudent")}</th>
+                      <th scope="col" className="px-5 py-3 text-start font-medium">{t("colAttempt")}</th>
+                      <th scope="col" className="px-5 py-3 text-start font-medium">{t("colSubmitted")}</th>
+                      <th scope="col" className="px-5 py-3 text-start font-medium">{t("colAi")}</th>
+                      <th scope="col" className="px-5 py-3 text-start font-medium">{t("colFinal")}</th>
+                      <th scope="col" className="px-5 py-3 text-start font-medium">{t("colStatus")}</th>
+                      <th scope="col" className="px-5 py-3 text-end font-medium">{t("colActions")}</th>
+                    </tr>
+                  </thead>
+                );
+
+                const renderTable = (title: string, rows: SubmissionRow[], showLateBadge: boolean) => (
+                  <section className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-[var(--ink)]">{title}</h3>
+                      <span className="rounded-full bg-[var(--glass-inset)] px-2 py-0.5 text-xs font-medium text-[var(--ink-soft)] ">
+                        {formatNumber(rows.length, locale)}
+                      </span>
+                    </div>
+                    {rows.length === 0 ? (
+                      <EmptyState title={t("noSubmissions")} description={t("noSubmissionsHint")} />
+                    ) : (
+                      <div className="overflow-x-auto rounded-xl border border-[var(--line)]">
+                        <table className="w-full min-w-[56rem] text-sm">
+                          {tableHead}
+                          <tbody className="divide-y divide-[var(--line)]">
+                            {rows.map((row) => renderRow(row, showLateBadge))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </section>
+                );
+
+                return (
+                  <>
+                    {renderTable(t("gradedOnTimeTitle"), gradedOnTime, false)}
+                    {deadlineMs !== null ? renderTable(t("gradedLateTitle"), gradedLate, false) : null}
+                    {renderTable(t("pendingTitle"), pendingList, true)}
+                  </>
+                );
+              })()}
+            </div>
+          )}
+        </Card>
+        </div>
 
         <div className="space-y-6">
           <Card>
@@ -321,183 +487,6 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
         }
       />
 
-      <Card>
-        <CardHeader
-          title={t("submissionsTitle")}
-          action={
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-xs text-[var(--ink-muted)]">
-                {t("submissionsCount", {
-                  count: formatNumber(latestSubmissions.length, locale),
-                })}
-              </span>
-              <CsvDownloadButton locale={locale} kind="assignment" id={assignment.id} label={ta("exportGrades")} />
-            </div>
-          }
-        />
-
-        {latestSubmissions.length === 0 ? (
-          <div className="p-5">
-            <EmptyState title={t("noSubmissions")} description={t("noSubmissionsHint")} />
-          </div>
-        ) : (
-          <div className="space-y-6 p-5">
-            {(() => {
-              const renderRow = (row: SubmissionRow, showLateBadge: boolean) => {
-                const student = row.profiles;
-                const ai = row.ai_score === null ? null : Number(row.ai_score);
-                const final = row.final_score === null ? null : Number(row.final_score);
-                const late = isLate(row);
-                return (
-                  <tr key={row.id}>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-50 text-xs font-semibold text-primary-700 dark:bg-primary-500/10 dark:text-primary-300">
-                          {initials(student?.full_name ?? "?")}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-[var(--ink)]">{student?.full_name ?? "—"}</p>
-                          <p className="truncate text-xs text-[var(--ink-muted)]">
-                            {student ? `@${student.username}` : ""}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-3.5 text-[var(--ink-soft)]">
-                      {t("attemptOf", {
-                        current: attemptNumber.get(row.id) ?? 1,
-                        total: byStudent.get(row.student_id)?.length ?? 1,
-                      })}
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-3.5 text-xs text-[var(--ink-muted)]">
-                      <div className="flex flex-col gap-0.5">
-                        <span>
-                          {formatDate(row.created_at, locale, {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })}
-                        </span>
-                        {late ? (
-                          <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
-                            {formatLateBy(row)}
-                          </span>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-3.5">
-                      {ai === null ? (
-                        <span className="text-[var(--ink-muted)]">—</span>
-                      ) : (
-                        <span className="text-[var(--ink-soft)]">{formatNumber(ai, locale, 1)}</span>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-3.5">
-                      {final === null ? (
-                        <span className="text-[var(--ink-muted)]">—</span>
-                      ) : (
-                        <span className="font-medium text-[var(--ink)]">{formatNumber(final, locale, 1)}</span>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-3.5">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span
-                          className={
-                            row.status === "graded"
-                              ? "rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
-                              : row.status === "flagged"
-                                ? "rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
-                                : "rounded-full bg-[var(--glass-inset)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--ink-soft)] "
-                          }
-                        >
-                          {ts(row.status)}
-                        </span>
-                        {showLateBadge ? (
-                          <span
-                            className={
-                              late
-                                ? "rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
-                                : "rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
-                            }
-                          >
-                            {late ? t("lateBadge") : t("onTimeBadge")}
-                          </span>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-3.5 text-end">
-                      <Link
-                        href={`/admin/assignments/${assignment.id}/submissions/${row.id}`}
-                        className={`${buttonSecondary} px-3 py-1.5 text-xs`}
-                      >
-                        {t("review")}
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              };
-
-              const tableHead = (
-                <thead className="bg-[var(--glass-inset)] text-xs uppercase tracking-wide text-[var(--ink-muted)] ">
-                  <tr>
-                    <th scope="col" className="px-5 py-3 text-start font-medium">
-                      {t("colStudent")}
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-start font-medium">
-                      {t("colAttempt")}
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-start font-medium">
-                      {t("colSubmitted")}
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-start font-medium">
-                      {t("colAi")}
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-start font-medium">
-                      {t("colFinal")}
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-start font-medium">
-                      {t("colStatus")}
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-end font-medium">
-                      {t("colActions")}
-                    </th>
-                  </tr>
-                </thead>
-              );
-
-              const renderTable = (title: string, rows: SubmissionRow[], showLateBadge: boolean) => (
-                <section className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-[var(--ink)]">{title}</h3>
-                    <span className="rounded-full bg-[var(--glass-inset)] px-2 py-0.5 text-xs font-medium text-[var(--ink-soft)] ">
-                      {formatNumber(rows.length, locale)}
-                    </span>
-                  </div>
-                  {rows.length === 0 ? (
-                    <EmptyState title={t("noSubmissions")} description={t("noSubmissionsHint")} />
-                  ) : (
-                    <div className="overflow-x-auto rounded-xl border border-[var(--line)]">
-                      <table className="w-full min-w-[56rem] text-sm">
-                        {tableHead}
-                        <tbody className="divide-y divide-[var(--line)]">
-                          {rows.map((row) => renderRow(row, showLateBadge))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </section>
-              );
-
-              return (
-                <>
-                  {renderTable(t("gradedOnTimeTitle"), gradedOnTime, false)}
-                  {deadlineMs !== null ? renderTable(t("gradedLateTitle"), gradedLate, false) : null}
-                  {renderTable(t("pendingTitle"), pendingList, true)}
-                </>
-              );
-            })()}
-          </div>
-        )}
-      </Card>
     </div>
   );
 }
