@@ -1,18 +1,14 @@
+import { FileText, ListChecks } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CreateSessionForm } from "@/components/admin/create-session-form";
 import { FormDialog } from "@/components/admin/form-dialog";
-import { Alert, Card, CardHeader, EmptyState, PageHeader, buttonSecondary } from "@/components/ui";
+import { Alert, EmptyState, PageHeader, badgeClass, buttonSecondary } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
-import { formatDate, cairoToday } from "@/lib/utils";
+import { cn, formatDate, formatNumber, cairoToday } from "@/lib/utils";
 import type { SessionSummary } from "@/lib/types";
-
-const liveBadge =
-  "inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/10 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-400/20";
-const mutedBadge =
-  "inline-flex items-center rounded-full bg-[var(--glass-inset)] px-2.5 py-1 text-xs font-medium text-[var(--ink-soft)] ring-1 ring-inset ring-slate-500/10 dark:ring-slate-400/20";
 
 export default async function AdminSessionsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
@@ -24,9 +20,18 @@ export default async function AdminSessionsPage({ params }: { params: Promise<{ 
   const tn = await getTranslations("nav");
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("admin_session_overview");
-  const sessions = (data ?? []) as SessionSummary[];
+  const [overviewResult, materialsResult, assignmentsResult] = await Promise.all([
+    supabase.rpc("admin_session_overview"),
+    supabase.from("session_materials").select("session_id"),
+    supabase.from("assignments").select("id", { count: "exact", head: true }),
+  ]);
 
+  const sessions = (overviewResult.data ?? []) as SessionSummary[];
+  const materialCountBySession = new Map<string, number>();
+  for (const row of (materialsResult.data ?? []) as Array<{ session_id: string }>) {
+    materialCountBySession.set(row.session_id, (materialCountBySession.get(row.session_id) ?? 0) + 1);
+  }
+  const taskCount = assignmentsResult.count ?? 0;
   const today = cairoToday();
 
   return (
@@ -46,83 +51,68 @@ export default async function AdminSessionsPage({ params }: { params: Promise<{ 
         }
       />
 
-      <div className="space-y-6">
-        <Card>
-          <CardHeader title={t("listTitle")} />
-          {error ? (
-            <div className="p-5">
-              <Alert>{t("loadError")}</Alert>
-            </div>
-          ) : !sessions || sessions.length === 0 ? (
-            <div className="p-5">
-              <EmptyState title={t("empty")} />
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[38rem] text-sm">
-                <thead className="bg-[var(--glass-inset)] text-xs uppercase tracking-wide text-[var(--ink-muted)] ">
-                  <tr>
-                    <th scope="col" className="px-5 py-3 text-start font-medium">
-                      {t("colSession")}
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-start font-medium">
-                      {t("colDate")}
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-start font-medium">
-                      {t("colAttendance")}
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-start font-medium">
-                      {t("colCode")}
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-end font-medium" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--line)]">
-                  {sessions.map((session) => (
-                    <tr key={session.id}>
-                      <td className="px-5 py-3.5">
-                        <Link
-                          href={`/admin/sessions/${session.id}`}
-                          className="font-medium text-[var(--ink)] hover:text-primary-600 dark:text-white dark:hover:text-primary-400"
-                        >
-                          {session.title}
-                        </Link>
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3.5 text-[var(--ink-muted)]">
-                        {formatDate(session.session_date, locale)}
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3.5">
-                        <span className="font-medium text-[var(--ink)]">{session.checked_in_count}</span>
-                        <span className="text-[var(--ink-muted)]">
-                          {" / "}
-                          {session.class_size}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        {session.code_active ? (
-                          <span className={liveBadge}>{t("codeActive")}</span>
-                        ) : session.code_expires_at ? (
-                          <span className={mutedBadge}>{t("codeExpired")}</span>
-                        ) : (
-                          <span className={mutedBadge}>{t("noCode")}</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3.5 text-end">
-                        <Link
-                          href={`/admin/sessions/${session.id}`}
-                          className={`${buttonSecondary} px-3 py-1.5 text-xs`}
-                        >
-                          {t("open")}
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-      </div>
+      {overviewResult.error ? (
+        <Alert>{t("loadError")}</Alert>
+      ) : sessions.length === 0 ? (
+        <EmptyState title={t("empty")} />
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {sessions.map((session, index) => {
+            const number = String(sessions.length - index).padStart(2, "0");
+            const published = new Date(session.session_date).getTime() <= new Date(today).getTime();
+            const files = materialCountBySession.get(session.id) ?? 0;
+
+            return (
+              <Link
+                key={session.id}
+                href={`/admin/sessions/${session.id}`}
+                className="group overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--glass)] transition hover:border-bronze-400/50"
+              >
+                <div className="relative flex items-start justify-between border-b border-[var(--line)] bg-[var(--glass-inset)] px-4 py-3">
+                  <span className={badgeClass}>{number}</span>
+                  <span
+                    className={cn(
+                      badgeClass,
+                      published
+                        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                        : "",
+                    )}
+                  >
+                    {published ? t("published") : t("upcoming")}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 grid place-items-center font-mono text-5xl font-bold text-[var(--ink)]/10"
+                  >
+                    {number}
+                  </span>
+                </div>
+                <div className="p-4">
+                  <h3 className="text-base font-bold text-[var(--ink)]">{session.title}</h3>
+                  <p className="mt-1 text-sm text-[var(--ink-muted)]">{t("noDescription")}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--ink-soft)]">
+                    <span className="inline-flex items-center gap-1.5">
+                      <ListChecks className="size-3.5" aria-hidden="true" />
+                      {formatNumber(taskCount, locale)} {t("tasks")}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <FileText className="size-3.5" aria-hidden="true" />
+                      {formatNumber(files, locale)} {t("files")}
+                    </span>
+                    <span className="ms-auto text-[var(--ink-muted)]">
+                      {formatDate(session.session_date, locale)}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-xs text-[var(--ink-muted)]">
+                    {formatNumber(session.checked_in_count, locale)} / {formatNumber(session.class_size, locale)}{" "}
+                    {t("checkedIn")}
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
