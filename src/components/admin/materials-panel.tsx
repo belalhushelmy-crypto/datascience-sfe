@@ -1,12 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { addMaterialAction, createMaterialUploadUrlAction, deleteMaterialAction } from "@/actions/materials";
 import { MATERIAL_BUCKET, MAX_MATERIAL_FILE_BYTES } from "@/lib/materials";
 import { createClient } from "@/lib/supabase/client";
 import type { MaterialState } from "@/lib/types";
-import { Alert, Card, CardHeader, EmptyState, buttonSecondary, inputClass, labelClass } from "@/components/ui";
+import { Alert, Card, CardHeader, EmptyState, inputClass, labelClass } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 
 const initialState: MaterialState = { status: "idle" };
@@ -20,8 +20,6 @@ type MaterialRow = {
   language: string | null;
 };
 
-const TYPES = ["text", "file", "image", "video", "notebook", "code"] as const;
-
 export function MaterialsPanel({
   locale,
   sessionId,
@@ -33,18 +31,11 @@ export function MaterialsPanel({
 }) {
   const t = useTranslations("admin.session");
   const [state, formAction] = useActionState(submitMaterial, initialState);
-  const [type, setType] = useState<string>("text");
-  const [title, setTitle] = useState("");
-
-  const needsFile = type !== "text" && type !== "code";
-  const needsContent = type === "text" || type === "code";
-  const needsLanguage = type === "code" || type === "notebook";
 
   async function submitMaterial(previous: MaterialState, formData: FormData): Promise<MaterialState> {
-    const selectedType = String(formData.get("type") ?? "");
     const file = formData.get("file");
 
-    if (selectedType !== "text" && selectedType !== "code" && file instanceof File && file.size > 0) {
+    if (file instanceof File && file.size > 0) {
       if (file.size > MAX_MATERIAL_FILE_BYTES) {
         return { status: "error", error: t("errors.fileSize") };
       }
@@ -78,6 +69,7 @@ export function MaterialsPanel({
       formData.set("file_path", upload.path);
       formData.set("mime_type", file.type || "");
       formData.set("title", file.name);
+      formData.set("type", "file");
       formData.delete("file");
     }
 
@@ -93,82 +85,19 @@ export function MaterialsPanel({
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="session_id" value={sessionId} />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="material_type" className={labelClass}>
-                {t("materialType")}
-              </label>
-              <select
-                id="material_type"
-                name="type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className={inputClass}
-              >
-                {TYPES.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="material_title" className={labelClass}>
-                {t("materialTitle")}
-              </label>
-              <input
-                id="material_title"
-                name="title"
-                type="text"
-                required={!needsFile}
-                maxLength={120}
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                className={inputClass}
-              />
-              {needsFile ? <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("materialTitleAuto")}</p> : null}
-            </div>
+          <div>
+            <label htmlFor="material_file" className={labelClass}>
+              {t("materialFile")}
+            </label>
+            <input
+              id="material_file"
+              name="file"
+              type="file"
+              required
+              className={inputClass}
+            />
+            <p className="mt-1.5 text-xs text-[var(--ink-muted)]">{t("materialTitleAuto")}</p>
           </div>
-
-          {needsContent ? (
-            <div>
-              <label htmlFor="material_content" className={labelClass}>
-                {t("materialContent")}
-              </label>
-              <textarea id="material_content" name="content" rows={6} className={inputClass} />
-            </div>
-          ) : null}
-
-          {needsLanguage ? (
-            <div>
-              <label htmlFor="material_language" className={labelClass}>
-                {t("materialLanguage")}
-              </label>
-              <input
-                id="material_language"
-                name="language"
-                type="text"
-                placeholder="python, cpp, …"
-                className={inputClass}
-              />
-            </div>
-          ) : null}
-
-          {needsFile ? (
-            <div>
-              <label htmlFor="material_file" className={labelClass}>
-                {t("materialFile")}
-              </label>
-              <input
-                id="material_file"
-                name="file"
-                type="file"
-                required
-                onChange={(event) => setTitle(event.target.files?.[0]?.name ?? "")}
-                className={inputClass}
-              />
-            </div>
-          ) : null}
 
           {state.status === "error" ? <Alert>{state.error}</Alert> : null}
           {state.status === "success" ? <Alert tone="success">{state.message}</Alert> : null}
