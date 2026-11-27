@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Data Science SFE",
-    "description": "Attendance, assignments, feedback and progress for CS fundamentals sessions."
+    "description": "Attendance, assignments, feedback and progress for Python fundamentals sessions."
   },
   "common": {
     "appName": "Data Science SFE",
