@@ -403,6 +403,10 @@ export async function deleteStudentAccountAction(
       studentId,
     });
 
+    // Ban first so the identity cannot keep an active session, then remove
+    // dependent rows in an order that keeps the audit trigger's FKs valid.
+    await admin.auth.admin.updateUserById(studentId, { ban_duration: "876000h" });
+    await admin.from("attendance").delete().eq("student_id", studentId);
     await admin.from("attendance_audit_log").delete().eq("student_id", studentId);
     await admin.from("attendance_audit_log").delete().eq("changed_by", studentId);
     const { error: cleanupError } = await admin.from("profiles").delete().eq("id", studentId);
