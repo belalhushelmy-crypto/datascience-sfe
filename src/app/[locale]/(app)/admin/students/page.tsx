@@ -5,6 +5,8 @@ import { CsvDownloadButton } from "@/components/admin/csv-download-button";
 import { CsvImportForm } from "@/components/admin/csv-import-form";
 import { ResetPasswordDialog } from "@/components/admin/reset-password-dialog";
 import { ChangeRoleDialog } from "@/components/admin/change-role-dialog";
+import { GradingTeacherDialog } from "@/components/admin/grading-teacher-dialog";
+import { ManualPointsDialog } from "@/components/admin/manual-points-dialog";
 import { DeleteAccountDialog } from "@/components/admin/delete-account-dialog";
 import { Alert, Card, CardHeader, EmptyState, PageHeader, buttonSecondary, inputClass } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
@@ -22,6 +24,7 @@ type StudentRow = {
   role: string;
   created_at: string;
   opted_out_of_leaderboard: boolean;
+  grading_teacher_id: string | null;
 };
 
 export default async function AdminStudentsPage({
@@ -50,7 +53,7 @@ export default async function AdminStudentsPage({
   const supabase = await createClient();
   let request = supabase
     .from("profiles")
-    .select("id, username, student_code, full_name, display_name, role, created_at, opted_out_of_leaderboard")
+    .select("id, username, student_code, full_name, display_name, role, created_at, opted_out_of_leaderboard, grading_teacher_id")
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -61,6 +64,18 @@ export default async function AdminStudentsPage({
   }
 
   const { data: students, error } = await request.returns<StudentRow[]>();
+
+  const { data: teacherRows } = await supabase
+    .from("profiles")
+    .select("id, full_name, display_name")
+    .eq("role", "teacher")
+    .order("display_name")
+    .returns<Array<{ id: string; full_name: string; display_name: string }>>();
+  const teachers = (teacherRows ?? []).map((row) => ({
+    id: row.id,
+    name: row.display_name || row.full_name,
+  }));
+  const teacherNameById = new Map(teachers.map((teacher) => [teacher.id, teacher.name]));
 
   const { data: metrics, error: metricsError } = await supabase.rpc("admin_student_metrics");
   const metricById = new Map(((metrics ?? []) as StudentMetric[]).map((row) => [row.student_id, row]));
@@ -136,6 +151,9 @@ export default async function AdminStudentsPage({
                       {t("role")}
                     </th>
                     <th scope="col" className="px-5 py-3 text-start font-medium">
+                      {t("colGradingTeacher")}
+                    </th>
+                    <th scope="col" className="px-5 py-3 text-start font-medium">
                       {t("colAttendance")}
                     </th>
                     <th scope="col" className="px-5 py-3 text-start font-medium">
@@ -171,6 +189,11 @@ export default async function AdminStudentsPage({
                         <td className="px-5 py-3.5">
                           <span className="inline-flex items-center rounded-full bg-[var(--glass-inset)] px-2.5 py-0.5 text-xs font-medium text-[var(--ink-soft)] ">
                             {student.role}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className="text-xs text-[var(--ink-soft)]">
+                            {(student.grading_teacher_id && teacherNameById.get(student.grading_teacher_id)) || "—"}
                           </span>
                         </td>
                         <td className="whitespace-nowrap px-5 py-3.5">
@@ -216,6 +239,22 @@ export default async function AdminStudentsPage({
                               currentRole={student.role}
                               locale={locale}
                             />
+                            {student.role === "student" ? (
+                              <>
+                                <GradingTeacherDialog
+                                  studentId={student.id}
+                                  studentName={student.full_name}
+                                  teachers={teachers}
+                                  currentTeacherId={student.grading_teacher_id}
+                                  locale={locale}
+                                />
+                                <ManualPointsDialog
+                                  studentId={student.id}
+                                  studentName={student.full_name}
+                                  locale={locale}
+                                />
+                              </>
+                            ) : null}
                             {student.role === "student" ? (
                               <DeleteAccountDialog
                                 studentId={student.id}

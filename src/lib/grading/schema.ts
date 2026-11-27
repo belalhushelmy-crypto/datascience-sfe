@@ -44,6 +44,7 @@ export type GradingInput = {
   expectedOutput: string | null;
   maxScore: number;
   code: string;
+  fileName?: string | null;
 };
 
 function normalizeIssues(value: string[] | string | null | undefined): string[] {

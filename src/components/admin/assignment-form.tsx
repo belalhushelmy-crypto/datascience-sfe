@@ -9,6 +9,13 @@ import { SubmitButton } from "@/components/submit-button";
 
 const initialState: AssignmentFormState = { status: "idle" };
 
+const DEFAULT_FILE_FORMATS = [
+  ".py", ".ipynb", ".js", ".jsx", ".ts", ".tsx", ".java",
+  ".c", ".h", ".cpp", ".cs", ".go", ".rs", ".rb", ".php",
+  ".sql", ".r", ".txt", ".md", ".json", ".csv",
+  ".html", ".css", ".xml", ".yaml", ".yml",
+];
+
 export type AssignmentFormValues = {
   id?: string;
   title?: string;
@@ -19,6 +26,8 @@ export type AssignmentFormValues = {
   deadline?: string | null;
   allow_resubmit?: boolean;
   allowed_submission_types?: "file" | "text" | "both";
+  allowed_file_extensions?: string[] | null;
+  allow_any_file_extension?: boolean;
 };
 
 /** ISO → the `datetime-local` shape in Egypt time (Africa/Cairo). */
@@ -188,6 +197,32 @@ export function AssignmentForm({
               </label>
             ))}
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <span className={labelClass}>{t("fileFormatsLabel")}</span>
+          <label className="flex items-start gap-3 rounded-xl border border-[var(--line)] p-3 text-sm ">
+            <input
+              type="checkbox"
+              name="allow_any_file_extension"
+              defaultChecked={assignment?.allow_any_file_extension ?? true}
+              className="mt-0.5 size-4 rounded border-[var(--line-strong)] text-primary-600 focus:ring-primary-500 "
+            />
+            <span>
+              <span className="block font-medium text-[var(--ink)] ">{t("anyFileFormat")}</span>
+              <span className="block text-xs text-[var(--ink-muted)]">{t("anyFileFormatHint")}</span>
+            </span>
+          </label>
+          <input
+            id={`${idPrefix}-formats`}
+            name="allowed_file_extensions"
+            type="text"
+            dir="ltr"
+            defaultValue={(assignment?.allowed_file_extensions ?? DEFAULT_FILE_FORMATS).join(", ")}
+            placeholder=".py, .ipynb, .js"
+            className={`${inputClass} font-mono text-xs`}
+          />
+          <p className="text-xs text-[var(--ink-muted)]">{t("fileFormatsHint")}</p>
         </div>
 
         {state.status === "error" ? <Alert>{state.error}</Alert> : null}

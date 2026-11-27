@@ -19,6 +19,7 @@ export type Profile = {
   display_name: string;
   role: UserRole;
   opted_out_of_leaderboard: boolean;
+  grading_teacher_id?: string | null;
   created_at: string;
 };
 

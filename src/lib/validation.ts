@@ -107,7 +107,20 @@ export const assignmentSchema = z.object({
   max_score: z.coerce.number().min(1).max(1000),
   allow_resubmit: z.boolean(),
   allowed_submission_types: z.enum(["file", "text", "both"]).default("both"),
+  allowed_file_extensions: z.string().max(1000).default(""),
+  allow_any_file_extension: z.boolean().default(true),
 });
+
+/** Comma/newline separated staff input → normalized, de-duplicated extensions. */
+export function parseFileExtensions(value: string): string[] {
+  const items = value
+    .split(/[\s,;]+/)
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean)
+    .map((part) => (part.startsWith(".") ? part : `.${part}`))
+    .filter((part) => /^\.[a-z0-9]{1,10}$/.test(part));
+  return Array.from(new Set(items)).slice(0, 40);
+}
 
 /**
  * `datetime-local` values have no timezone. We treat them as UTC so the value

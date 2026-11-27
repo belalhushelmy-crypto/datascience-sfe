@@ -7,6 +7,7 @@ import { GradingStatusWatcher } from "@/components/grading-status-watcher";
 import { CodePanel } from "@/components/code-panel";
 import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
 import { requireProfile } from "@/lib/auth";
+import { colabUrl, isNotebookPath, fileNameFromPath } from "@/lib/colab";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatNumber, stringList } from "@/lib/utils";
@@ -25,6 +26,8 @@ type AssignmentRow = {
   max_score: number | string;
   allow_resubmit: boolean;
   allowed_submission_types: "file" | "text" | "both";
+  allowed_file_extensions: string[] | null;
+  allow_any_file_extension: boolean | null;
 };
 
 type AttemptRow = {
@@ -64,7 +67,7 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
   const { data: assignment, error: assignmentError } = await supabase
     .from("assignments")
     .select(
-      "id, title, description, rubric, expected_output, deadline, max_score, allow_resubmit, allowed_submission_types",
+      "id, title, description, rubric, expected_output, deadline, max_score, allow_resubmit, allowed_submission_types, allowed_file_extensions, allow_any_file_extension",
     )
     .eq("id", parsedId.data)
     .maybeSingle()
@@ -210,6 +213,8 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
           assignmentId={assignment.id}
           hasAttempts={attempts.length > 0}
           allowedTypes={assignment.allowed_submission_types}
+          allowedExtensions={assignment.allowed_file_extensions}
+          allowAnyFileExtension={assignment.allow_any_file_extension ?? true}
         />
       ) : (
         <Alert tone="info">{closed ? t("closedNotice") : t("resubmitNotice")}</Alert>
@@ -321,19 +326,31 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
                     </summary>
                     <div className="border-t border-[var(--line)] p-3">
                       <CodePanel
-                        code={attempt.code_text || "# file submission"}
-                        title={`attempt-${attemptNumber}.py`}
+                        code={attempt.code_text || "No content"}
+                        title={fileNameFromPath(attempt.file_path, `attempt-${attemptNumber}.txt`)}
                         maxHeight="20rem"
                         showCopy={false}
                       />
                       {signedUrl ? (
-                        <a
-                          href={signedUrl}
-                          className="mt-2 inline-block text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
-                          download
-                        >
-                          {t("download")}
-                        </a>
+                        <span className="mt-2 flex flex-wrap items-center gap-4">
+                          {isNotebookPath(attempt.file_path) ? (
+                            <a
+                              href={colabUrl(signedUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
+                            >
+                              {t("openInColab")}
+                            </a>
+                          ) : null}
+                          <a
+                            href={signedUrl}
+                            className="text-xs font-medium text-bronze-700 hover:text-bronze-600 dark:text-bronze-300"
+                            download
+                          >
+                            {t("download")}
+                          </a>
+                        </span>
                       ) : null}
                     </div>
                   </details>

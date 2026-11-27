@@ -28,6 +28,8 @@ type AssignmentRow = {
   allow_resubmit: boolean;
   similarity_checked_at: string | null;
   allowed_submission_types: "file" | "text" | "both";
+  allowed_file_extensions: string[] | null;
+  allow_any_file_extension: boolean | null;
 };
 
 type SubmissionRow = {
@@ -65,7 +67,7 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
     supabase
       .from("assignments")
       .select(
-        "id, title, description, rubric, expected_output, deadline, max_score, allow_resubmit, similarity_checked_at, allowed_submission_types",
+        "id, title, description, rubric, expected_output, deadline, max_score, allow_resubmit, similarity_checked_at, allowed_submission_types, allowed_file_extensions, allow_any_file_extension",
       )
       .eq("id", parsedId.data)
       .maybeSingle()
@@ -259,6 +261,9 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
             max_score: assignment.max_score,
             deadline: assignment.deadline,
             allow_resubmit: assignment.allow_resubmit,
+            allowed_submission_types: assignment.allowed_submission_types,
+            allowed_file_extensions: assignment.allowed_file_extensions,
+            allow_any_file_extension: assignment.allow_any_file_extension ?? true,
           }}
         />
 

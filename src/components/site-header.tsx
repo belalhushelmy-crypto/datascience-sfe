@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  PanelLeftClose,
+  PanelLeftOpen,
   BellRing,
   BrainCircuit,
   CalendarDays,
@@ -37,6 +40,20 @@ export function SiteHeader({ profile }: { profile: Profile }) {
   const t = useTranslations("nav");
   const tc = useTranslations("common");
   const tr = useTranslations("roles");
+
+  const [collapsed, setCollapsed] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(window.localStorage.getItem("sfe-sidebar-collapsed") === "1");
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    document.documentElement.style.setProperty("--sidebar-width", collapsed ? "4.5rem" : "15rem");
+    window.localStorage.setItem("sfe-sidebar-collapsed", collapsed ? "1" : "0");
+  }, [collapsed, hydrated]);
 
   const isTeacherOrAdmin = profile.role === "teacher" || profile.role === "admin";
   const isHr = profile.role === "hr";
@@ -101,40 +118,6 @@ export function SiteHeader({ profile }: { profile: Profile }) {
             </span>
           </Link>
 
-          <nav className="ms-3 hidden items-center gap-0.5 xl:flex" aria-label={tc("appName")}>
-            {links.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "group relative inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition",
-                    active
-                      ? "bg-bronze-500/12 text-bronze-700 ring-1 ring-inset ring-bronze-400/25 dark:text-bronze-200"
-                      : "text-[var(--ink-soft)] hover:bg-[var(--glass-inset)] hover:text-[var(--ink)]",
-                  )}
-                  aria-current={active ? "page" : undefined}
-                >
-                  <Icon
-                    className={cn(
-                      "size-3.5 transition",
-                      active
-                        ? "text-bronze-600 dark:text-bronze-300"
-                        : "text-[var(--ink-muted)] group-hover:text-[var(--ink-soft)]",
-                    )}
-                    aria-hidden="true"
-                  />
-                  {item.label}
-                  {active ? (
-                    <span className="absolute inset-x-2 -bottom-px h-px bg-gradient-to-r from-transparent via-bronze-400 to-transparent" />
-                  ) : null}
-                </Link>
-              );
-            })}
-          </nav>
-
           <div className="ms-auto flex items-center gap-0.5 sm:gap-1">
             <LocaleSwitcher />
             <ThemeToggle />
@@ -194,6 +177,75 @@ export function SiteHeader({ profile }: { profile: Profile }) {
           </div>
         </div>
       </header>
+
+      {/* Desktop: collapsible fixed left sidebar. Mobile keeps the bottom dock. */}
+      <aside
+        className={cn(
+          "fixed bottom-0 start-0 top-16 z-30 hidden flex-col border-e border-[var(--line)] bg-[color-mix(in_oklab,var(--bg)_92%,transparent)] backdrop-blur-xl transition-[width] duration-200 lg:flex",
+          collapsed ? "w-[4.5rem]" : "w-60",
+        )}
+      >
+        <div className={cn("flex items-center pt-4", collapsed ? "justify-center px-2" : "justify-between px-4")}>
+          {collapsed ? null : (
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze-600 dark:text-bronze-300">
+              // NAV
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => setCollapsed((value) => !value)}
+            aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
+            title={collapsed ? t("expandSidebar") : t("collapseSidebar")}
+            className="grid size-8 shrink-0 place-items-center rounded-lg text-[var(--ink-muted)] transition hover:bg-[var(--glass-inset)] hover:text-[var(--ink)]"
+          >
+            {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+          </button>
+        </div>
+        <nav
+          className={cn("flex-1 space-y-1 overflow-y-auto pb-4", collapsed ? "px-2" : "px-3")}
+          aria-label={tc("appName")}
+        >
+          {links.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={collapsed ? item.label : undefined}
+                className={cn(
+                  "group relative flex items-center rounded-xl py-2.5 text-sm font-medium transition",
+                  collapsed ? "justify-center px-2" : "gap-3 px-3",
+                  active
+                    ? "bg-bronze-500/12 text-bronze-700 ring-1 ring-inset ring-bronze-400/25 dark:text-bronze-200"
+                    : "text-[var(--ink-soft)] hover:bg-[var(--glass-inset)] hover:text-[var(--ink)]",
+                )}
+                aria-current={active ? "page" : undefined}
+              >
+                {active ? (
+                  <span className="absolute inset-y-2 start-0 w-0.5 rounded-full bg-bronze-500" />
+                ) : null}
+                <Icon
+                  className={cn(
+                    "size-4 shrink-0 transition",
+                    active
+                      ? "text-bronze-600 dark:text-bronze-300"
+                      : "text-[var(--ink-muted)] group-hover:text-[var(--ink-soft)]",
+                  )}
+                  aria-hidden="true"
+                />
+                {collapsed ? null : <span className="truncate">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+        {collapsed ? null : (
+          <div className="border-t border-[var(--line)] px-5 py-4">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--ink-muted)]">// SFE</p>
+            <p className="mt-1 truncate text-xs font-semibold text-[var(--ink)]">{tc("appName")}</p>
+          </div>
+        )}
+      </aside>
 
       {/* Mobile: bottom navigation, styled like a dock. */}
       <nav

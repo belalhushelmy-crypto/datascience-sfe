@@ -49,7 +49,9 @@
     "grading": "تصحيح AI",
     "announcements": "الإعلانات",
     "warnings": "تحذيرات",
-    "accountMenu": "قائمة الحساب"
+    "accountMenu": "قائمة الحساب",
+    "collapseSidebar": "طيّ الشريط الجانبي",
+    "expandSidebar": "توسيع الشريط الجانبي"
   },
   "roles": {
     "admin": "المدير",
@@ -435,7 +437,8 @@
         "forbidden": "هذا الإجراء للمعلّم فقط.",
         "updateFailed": "تعذّر تحديث كلمة المرور. حاول مرة أخرى.",
         "roleChangeFailed": "تعذّر تغيير الدور. حاول مرة أخرى.",
-        "deleteFailed": "تعذّر حذف الحساب. حاول مرة أخرى."
+        "deleteFailed": "تعذّر حذف الحساب. حاول مرة أخرى.",
+        "teacherAssignFailed": "تعذّر تعيين المعلم. حاول مرة أخرى."
       },
       "colAttendance": "الحضور",
       "colAverage": "المعدل",
@@ -459,7 +462,15 @@
       "deleteAccountTitle": "حذف الحساب",
       "deleteConfirm": "سيتم حذف {name} وجميع بياناته نهائيًا. لا يمكن التراجع عن هذا.",
       "deleting": "جارٍ الحذف…",
-      "accountDeleted": "تم حذف الحساب."
+      "accountDeleted": "تم حذف الحساب.",
+      "colGradingTeacher": "معلم التصحيح",
+      "assignTeacher": "تعيين معلم",
+      "assignTeacherTitle": "تعيين معلم التصحيح",
+      "assignTeacherHint": "اختر المعلم المسؤول عن تصحيح {name}.",
+      "noTeacher": "لا يوجد معلم مُعيّن",
+      "assignTeacherSave": "تعيين",
+      "assignTeacherSaving": "جارٍ التعيين…",
+      "teacherAssigned": "تم تحديث معلم التصحيح."
     },
     "sessions": {
       "title": "الجلسات والحضور",
@@ -608,7 +619,7 @@
         "codeInvalid": "يجب أن يكون الكود بين 1 و 100,000 حرف.",
         "invalidType": "نوع التسليم هذا غير مسموح لهذا الواجب.",
         "fileMissing": "اختر ملف .py أولاً.",
-        "fileType": "يُقبل ملف .py فقط.",
+        "fileType": "الصيغ المسموحة فقط: {formats}",
         "fileSize": "حجم الملف يتجاوز 100 ك.ب.",
         "fileEmpty": "الملف فارغ.",
         "fileNotText": "الملف ليس نصًا صالحًا بترميز UTF-8.",
@@ -618,20 +629,24 @@
       "exportGrades": "تصدير الدرجات (CSV)",
       "allowedTypesLabel": "أنواع التسليم المسموحة",
       "allowedType": {
-        "file": "رفع ملف .py فقط",
+        "file": "رفع ملف فقط",
         "text": "لصق الكود فقط",
         "both": "ملف أو لصق (كلاهما مسموح)"
       },
       "allowedTypeHint": {
-        "file": "يجب على الطالب رفع ملف .py. لا يمكن اللصق.",
+        "file": "يجب على الطالب رفع ملف. لا يمكن اللصق.",
         "text": "يجب على الطالب لصق الكود في منطقة نصية. لا يمكن رفع الملفات.",
-        "both": "يمكن للطالب اختيار رفع ملف .py أو لصق الكود."
+        "both": "يمكن للطالب اختيار رفع ملف أو لصق الكود."
       },
-      "tabFile": "رفع ملف .py",
+      "fileFormatsLabel": "صيغ الملفات المسموحة",
+      "anyFileFormat": "قبول أي صيغة ملف",
+      "anyFileFormatHint": "يقرأ مصحّح الذكاء أي ملف نصي بترميز UTF-8، بما في ذلك دفاتر .ipynb.",
+      "fileFormatsHint": "امواسات مفصولة بفواصل. تُستخدم فقط عند إيقاف «قبول أي صيغة ملف».",
+      "tabFile": "رفع ملف",
       "tabPaste": "لصق الكود",
       "submissionMethod": "طريقة التسليم",
       "codeLabel": "الصق كود Python",
-      "codePlaceholder": "#include <iostream>\n\nint main() {\n    // كودك هنا\n    return 0;\n}",
+      "codePlaceholder": "print('كودك هنا')",
       "codeHint": "الصق حلّك. مفتاح Tab يُدرج مسافات.",
       "chars": "حرف"
     },
@@ -698,6 +713,7 @@
       "title": "مراجعة المحاولة",
       "codeTitle": "الكود المُرسل",
       "download": "تنزيل الملف",
+      "openInColab": "فتح في Colab",
       "aiTitle": "تصحيح الذكاء الاصطناعي",
       "aiSubtitle": "{model} · {date}",
       "aiMissing": "لم يصحح الذكاء الاصطناعي هذه المحاولة بعد.",
@@ -774,6 +790,15 @@
       "save": "حفظ القواعد",
       "saving": "جارٍ الحفظ…",
       "saved": "تم حفظ قواعد النقاط.",
+      "addPoints": "إضافة نقاط",
+      "addPointsTitle": "إضافة نقاط أو خصمها",
+      "addPointsHint": "عدّل رصيد {name} بأي قيمة، موجبة أو سالبة.",
+      "pointsValue": "النقاط",
+      "pointsValueHint": "استخدم قيمة سالبة لخصم النقاط.",
+      "pointsReason": "السبب (اختياري)",
+      "pointsReasonPlaceholder": "مثال: مشروع متميز",
+      "addingPoints": "جارٍ الحفظ…",
+      "pointsAdded": "تمت إضافة {points} نقطة لـ {name}.",
       "maintenanceTitle": "الصيانة",
       "maintenanceSubtitle": "إجراءات تُطبَّق على كل الطلاب.",
       "resetWeekTitle": "بدء أسبوع جديد",
@@ -804,7 +829,9 @@
         "invalid": "تحقّق من القيم المدخلة.",
         "saveFailed": "تعذّر حفظ القواعد.",
         "resetFailed": "تعذّر تصفير الأسبوع.",
-        "recalcFailed": "تعذّر إعادة حساب الأوسمة."
+        "recalcFailed": "تعذّر إعادة حساب الأوسمة.",
+        "invalidPoints": "أدخل قيمة نقاط صالحة بين -100000 و 100000.",
+        "pointsSaveFailed": "تعذّر حفظ النقاط. حاول مرة أخرى."
       }
     },
     "grading": {
@@ -1096,8 +1123,9 @@
     "statusFailed": "فشل التصحيح",
     "uploadTitle": "سلّم حلّك",
     "uploadSubtitle": "اختر طريقة التسليم بناءً على ما حدّده معلّمك.",
-    "chooseFile": "اختر ملف .py",
-    "fileHint": "بحد أقصى 100 ك.ب، نص UTF-8",
+    "chooseFile": "اختر ملفًا",
+    "fileHint": "أي صيغة نصية UTF-8 · بحد أقصى 100 ك.ب",
+    "openInColab": "فتح في Colab",
     "submit": "إرسال للتصحيح",
     "submitting": "جارٍ الإرسال…",
     "resubmit": "إرسال محاولة أخرى",
@@ -1107,11 +1135,11 @@
     "maxScore": "من {max}",
     "closedNotice": "انتهى الموعد النهائي، لذا أُغلق الإرسال.",
     "resubmitNotice": "هذا الواجب لا يقبل محاولات جديدة.",
-    "tabFile": "رفع ملف .py",
+    "tabFile": "رفع ملف",
     "tabPaste": "لصق الكود",
     "submissionMethod": "طريقة التسليم",
     "codeLabel": "الصق كود Python",
-    "codePlaceholder": "#include <iostream>\n\nint main() {\n    // كودك هنا\n    return 0;\n}",
+    "codePlaceholder": "print('كودك هنا')",
     "codeHint": "الصق حلّك. مفتاح Tab يُدرج مسافات.",
     "chars": "حرف",
     "errors": {
@@ -1121,8 +1149,8 @@
       "deadlinePassed": "انتهى الموعد النهائي لهذا الواجب.",
       "resubmitNotAllowed": "لا يمكنك رفع محاولة أخرى لهذا الواجب.",
       "tooManyUploads": "محاولات كثيرة. حاول بعد {seconds} ثانية.",
-      "fileMissing": "اختر ملف .py أولًا.",
-      "fileType": "يُقبل ملف .py فقط.",
+      "fileMissing": "اختر ملفًا أولًا.",
+      "fileType": "الصيغ المسموحة فقط: {formats}",
       "fileSize": "حجم الملف يتجاوز 100 ك.ب.",
       "fileEmpty": "الملف فارغ.",
       "fileNotText": "الملف ليس نصًا صالحًا بترميز UTF-8.",

@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { getCurrentProfile } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { pointsConfigSchema } from "@/lib/validation";
 import type { PointsConfigState } from "@/lib/types";
 
@@ -63,6 +64,53 @@ export async function updatePointsConfigAction(
 
   revalidatePoints(locale);
   return { status: "success", message: t("saved") };
+}
+
+export async function addManualPointsAction(
+  _previous: PointsConfigState,
+  formData: FormData,
+): Promise<PointsConfigState> {
+  const locale = toLocale(formData.get("locale"));
+  const t = await getTranslations({ locale, namespace: "admin.points" });
+
+  if (!(await isCurrentUserAdmin())) {
+    return { status: "error", error: t("errors.forbidden") };
+  }
+
+  const studentId = String(formData.get("student_id") ?? "").trim();
+  const rawPoints = String(formData.get("points") ?? "").trim();
+  const points = Number(rawPoints);
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 300);
+
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studentId) ||
+    !rawPoints ||
+    !Number.isFinite(points) ||
+    Math.abs(points) > 100_000
+  ) {
+    return { status: "error", error: t("errors.invalidPoints") };
+  }
+
+  const profile = await getCurrentProfile();
+  const admin = createAdminClient();
+  const { error } = await admin.from("point_adjustments").insert({
+    student_id: studentId,
+    points: Math.round(points * 100) / 100,
+    reason: reason || null,
+    created_by: profile?.id ?? null,
+  });
+
+  if (error) {
+    console.error("addManualPointsAction failed:", error.message);
+    return { status: "error", error: t("errors.pointsSaveFailed") };
+  }
+
+  revalidatePoints(locale);
+  revalidatePath(`/${locale}/admin/students`);
+  return {
+    status: "success",
+    message: t("pointsAdded", { points, name: String(formData.get("student_name") ?? "") }),
+  };
 }
 
 export async function resetWeeklyBoardAction(

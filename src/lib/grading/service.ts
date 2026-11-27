@@ -66,6 +66,7 @@ type GradingJob = {
 type SubmissionRow = {
   id: string;
   code_text: string;
+  file_path: string | null;
   status: SubmissionStatus;
   final_score: number | string | null;
   ai_score: number | string | null;
@@ -382,7 +383,7 @@ async function runJob(
   const { data: submission, error } = await admin
     .from("submissions")
     .select(
-      "id, code_text, status, final_score, ai_score, graded_by, ai_model, ai_provider, ai_graded_at, grading_attempts, grading_locked_at, grading_error, assignments(title, description, rubric, expected_output, max_score)",
+      "id, code_text, file_path, status, final_score, ai_score, graded_by, ai_model, ai_provider, ai_graded_at, grading_attempts, grading_locked_at, grading_error, assignments(title, description, rubric, expected_output, max_score)",
     )
     .eq("id", job.submission_id)
     .maybeSingle()
@@ -448,6 +449,7 @@ async function runJob(
     expectedOutput: assignment.expected_output,
     maxScore,
     code: submission.code_text,
+    fileName: submission.file_path?.split("/").pop() ?? null,
   };
 
   const config = providerConfig();

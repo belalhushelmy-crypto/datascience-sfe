@@ -14,11 +14,15 @@ export function SubmissionForm({
   assignmentId,
   hasAttempts,
   allowedTypes = "both",
+  allowedExtensions,
+  allowAnyFileExtension = true,
 }: {
   locale: string;
   assignmentId: string;
   hasAttempts: boolean;
   allowedTypes: "file" | "text" | "both";
+  allowedExtensions?: string[] | null;
+  allowAnyFileExtension?: boolean;
 }) {
   const t = useTranslations("assignments");
   const [state, formAction] = useActionState(submitAssignmentAction, initialState);
@@ -29,6 +33,10 @@ export function SubmissionForm({
   const [activeTab, setActiveTab] = useState<"file" | "text">(allowedTypes === "text" ? "text" : "file");
   const [code, setCode] = useState("");
   const MAX_CHARS = 100_000;
+  const accept =
+    allowAnyFileExtension || !allowedExtensions?.length
+      ? undefined
+      : allowedExtensions.map((extension) => (extension.startsWith(".") ? extension : `.${extension}`)).join(",");
 
   useEffect(() => {
     if (state.status === "success") {
@@ -142,7 +150,7 @@ export function SubmissionForm({
                 name="file"
                 type="file"
                 required
-                accept=".py,text/x-python"
+                accept={accept}
                 onChange={(event) => setFileName(event.target.files?.[0]?.name ?? null)}
                 className={`${inputClass} cursor-pointer file:me-3 file:rounded-lg file:border-0 file:bg-primary-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-primary-700 dark:file:bg-primary-500/10 dark:file:text-primary-300`}
               />
@@ -169,9 +177,9 @@ export function SubmissionForm({
                     <span className="size-2.5 rounded-full bg-amber-400/70" />
                     <span className="size-2.5 rounded-full bg-emerald-500/70" />
                   </span>
-                  <span className="ms-1 font-mono text-[10px] text-[var(--ink-muted)]">submission.py</span>
+                  <span className="ms-1 font-mono text-[10px] text-[var(--ink-muted)]">submission.txt</span>
                   <span className="ms-auto rounded border border-white/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[var(--ink-muted)]">
-                    Python
+                    Text
                   </span>
                 </div>
                 <div className="flex h-[26rem]">

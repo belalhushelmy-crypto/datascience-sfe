@@ -49,7 +49,9 @@
     "grading": "AI grading",
     "announcements": "Announcements",
     "warnings": "Warnings",
-    "accountMenu": "Account menu"
+    "accountMenu": "Account menu",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "roles": {
     "admin": "Admin",
@@ -435,7 +437,8 @@
         "forbidden": "Only the teacher can do that.",
         "updateFailed": "Could not update the password. Please try again.",
         "roleChangeFailed": "Could not change the role. Please try again.",
-        "deleteFailed": "Could not delete the account. Please try again."
+        "deleteFailed": "Could not delete the account. Please try again.",
+         "teacherAssignFailed": "Could not assign the teacher. Please try again."
       },
       "colAttendance": "Attendance",
       "colAverage": "Average",
@@ -459,7 +462,15 @@
       "deleteAccountTitle": "Delete account",
       "deleteConfirm": "This will permanently delete {name} and all their data. This cannot be undone.",
       "deleting": "Deleting…",
-      "accountDeleted": "Account deleted."
+      "accountDeleted": "Account deleted.",
+      "colGradingTeacher": "Grading teacher",
+      "assignTeacher": "Assign teacher",
+      "assignTeacherTitle": "Assign grading teacher",
+      "assignTeacherHint": "Choose the teacher responsible for grading {name}.",
+      "noTeacher": "No teacher assigned",
+      "assignTeacherSave": "Assign",
+      "assignTeacherSaving": "Assigning…",
+      "teacherAssigned": "Grading teacher updated."
     },
     "sessions": {
       "title": "Sessions & attendance",
@@ -608,7 +619,7 @@
         "codeInvalid": "Code must be between 1 and 100,000 characters.",
         "invalidType": "This submission type is not allowed for this assignment.",
         "fileMissing": "Choose a .py file first.",
-        "fileType": "Only .py files are accepted.",
+        "fileType": "Only these formats are accepted: {formats}",
         "fileSize": "The file is larger than 100 KB.",
         "fileEmpty": "The file is empty.",
         "fileNotText": "The file is not valid UTF-8 text.",
@@ -618,20 +629,24 @@
       "exportGrades": "Export grades (CSV)",
       "allowedTypesLabel": "Allowed submission types",
       "allowedType": {
-        "file": "Upload .py file only",
+        "file": "Upload a file only",
         "text": "Paste code only",
         "both": "File or paste (both allowed)"
       },
       "allowedTypeHint": {
-        "file": "Students must upload a .py file. Paste submission is disabled.",
+        "file": "Students must upload a file. Paste submission is disabled.",
         "text": "Students must paste code in a text area. File upload is disabled.",
-        "both": "Students can choose to upload a .py file or paste code."
+        "both": "Students can choose to upload a file or paste code."
       },
-      "tabFile": "Upload .py file",
+      "fileFormatsLabel": "Allowed file formats",
+      "anyFileFormat": "Accept any file format",
+      "anyFileFormatHint": "The AI grader reads any UTF-8 text file, including .ipynb notebooks.",
+      "fileFormatsHint": "Comma-separated extensions. Used only when “Accept any file format” is off.",
+      "tabFile": "Upload a file",
       "tabPaste": "Paste code",
       "submissionMethod": "Submission method",
       "codeLabel": "Paste your Python code",
-      "codePlaceholder": "#include <iostream>\n\nint main() {\n    // Your code here\n    return 0;\n}",
+      "codePlaceholder": "print('Your solution here')",
       "codeHint": "Paste your solution. Tab inserts spaces.",
       "chars": "chars"
     },
@@ -698,6 +713,7 @@
       "title": "Review submission",
       "codeTitle": "Submitted code",
       "download": "Download file",
+      "openInColab": "Open in Colab",
       "aiTitle": "AI grading",
       "aiSubtitle": "{model} · {date}",
       "aiMissing": "The AI has not graded this submission yet.",
@@ -774,6 +790,15 @@
       "save": "Save rules",
       "saving": "Saving…",
       "saved": "Points rules saved.",
+       "addPoints": "Add points",
+       "addPointsTitle": "Add or remove points",
+       "addPointsHint": "Adjust {name}'s total by any value, positive or negative.",
+       "pointsValue": "Points",
+       "pointsValueHint": "Use a negative value to deduct points.",
+       "pointsReason": "Reason (optional)",
+       "pointsReasonPlaceholder": "e.g. outstanding project",
+       "addingPoints": "Saving…",
+       "pointsAdded": "Added {points} points for {name}.",
       "maintenanceTitle": "Maintenance",
       "maintenanceSubtitle": "Actions that apply to every student.",
       "resetWeekTitle": "Start a new week",
@@ -804,7 +829,9 @@
         "invalid": "Check the values you entered.",
         "saveFailed": "Could not save the rules.",
         "resetFailed": "Could not reset the week.",
-        "recalcFailed": "Could not recalculate badges."
+        "recalcFailed": "Could not recalculate badges.",
+        "invalidPoints": "Enter a valid point value between -100000 and 100000.",
+        "pointsSaveFailed": "Could not save the points. Please try again."
       }
     },
     "grading": {
@@ -1096,8 +1123,9 @@
     "statusFailed": "Grading failed",
     "uploadTitle": "Submit your solution",
     "uploadSubtitle": "Choose how to submit based on what your teacher allowed.",
-    "chooseFile": "Choose .py file",
-    "fileHint": "Max 100 KB, UTF-8 text",
+    "chooseFile": "Choose a file",
+    "fileHint": "Any UTF-8 text format · Max 100 KB",
+    "openInColab": "Open in Colab",
     "submit": "Submit for grading",
     "submitting": "Submitting…",
     "resubmit": "Submit another attempt",
@@ -1107,11 +1135,11 @@
     "maxScore": "out of {max}",
     "closedNotice": "The deadline has passed, so submissions are closed.",
     "resubmitNotice": "This assignment does not accept new attempts.",
-    "tabFile": "Upload .py file",
+    "tabFile": "Upload a file",
     "tabPaste": "Paste code",
     "submissionMethod": "Submission method",
     "codeLabel": "Paste your Python code",
-    "codePlaceholder": "#include <iostream>\n\nint main() {\n    // Your code here\n    return 0;\n}",
+    "codePlaceholder": "print('Your solution here')",
     "codeHint": "Paste your solution. Tab inserts spaces.",
     "chars": "chars",
     "errors": {
@@ -1121,8 +1149,8 @@
       "deadlinePassed": "The deadline for this assignment has passed.",
       "resubmitNotAllowed": "You cannot upload another attempt for this assignment.",
       "tooManyUploads": "Too many uploads. Try again in {seconds} seconds.",
-      "fileMissing": "Choose a .py file first.",
-      "fileType": "Only .py files are accepted.",
+      "fileMissing": "Choose a file first.",
+      "fileType": "Only these formats are accepted: {formats}",
       "fileSize": "The file is larger than 100 KB.",
       "fileEmpty": "The file is empty.",
       "fileNotText": "The file is not valid UTF-8 text.",

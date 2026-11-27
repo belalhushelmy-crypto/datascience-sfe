@@ -315,6 +315,38 @@ export async function changeUserRoleAction(
   return { status: "success", message: t("roleChanged") };
 }
 
+export async function assignGradingTeacherAction(
+  _previous: ResetPasswordState,
+  formData: FormData,
+): Promise<ResetPasswordState> {
+  const locale = toLocale(formData.get("locale"));
+  const t = await getTranslations({ locale, namespace: "admin.students" });
+
+  if (!(await isCurrentUserAdmin())) {
+    return { status: "error", error: t("errors.forbidden") };
+  }
+
+  const studentId = String(formData.get("student_id") ?? "").trim();
+  const teacherId = String(formData.get("grading_teacher_id") ?? "").trim();
+  if (!studentId) {
+    return { status: "error", error: t("errors.invalid") };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({ grading_teacher_id: teacherId || null })
+    .eq("id", studentId);
+
+  if (error) {
+    console.error("assignGradingTeacherAction failed:", error.message);
+    return { status: "error", error: t("errors.teacherAssignFailed") };
+  }
+
+  revalidatePath(`/${locale}/admin/students`);
+  return { status: "success", message: t("teacherAssigned") };
+}
+
 export async function deleteStudentAccountAction(
   _previous: ResetPasswordState,
   formData: FormData,

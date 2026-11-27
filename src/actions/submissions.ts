@@ -25,11 +25,36 @@ type AssignmentRow = {
   deadline: string | null;
   allow_resubmit: boolean;
   allowed_submission_types: "file" | "text" | "both";
+  allowed_file_extensions: string[] | null;
+  allow_any_file_extension: boolean | null;
 };
 
 /** Maximum resubmits/attempts from one student per 10 minutes. */
 const UPLOAD_LIMIT = 5;
 const UPLOAD_WINDOW_MS = 10 * 60_000;
+
+function extensionOf(fileName: string): string {
+  const index = fileName.lastIndexOf(".");
+  return index < 0 ? "" : fileName.slice(index).toLowerCase();
+}
+
+function contentTypeFor(extension: string): string {
+  const types: Record<string, string> = {
+    ".ipynb": "application/x-ipynb+json",
+    ".json": "application/json",
+    ".pdf": "application/pdf",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".html": "text/html",
+    ".css": "text/css",
+    ".csv": "text/csv",
+    ".md": "text/markdown",
+  };
+  return types[extension] ?? "application/octet-stream";
+}
 
 export async function submitAssignmentAction(
   _previous: SubmitAssignmentState,
@@ -54,7 +79,7 @@ export async function submitAssignmentAction(
 
   const { data: assignment, error: assignmentError } = await supabase
     .from("assignments")
-    .select("id, deadline, allow_resubmit, allowed_submission_types")
+    .select("id, deadline, allow_resubmit, allowed_submission_types, allowed_file_extensions, allow_any_file_extension")
     .eq("id", assignmentId.data)
     .maybeSingle()
     .returns<AssignmentRow | null>();
@@ -111,8 +136,15 @@ export async function submitAssignmentAction(
     if (!(file instanceof File) || file.size === 0) {
       return { status: "error", error: t("errors.fileMissing") };
     }
-    if (!/\.py$/i.test(file.name)) {
-      return { status: "error", error: t("errors.fileType") };
+    const extension = extensionOf(file.name);
+    const allowedExtensions = (assignment.allowed_file_extensions ?? []).map((value) =>
+      value.toLowerCase().startsWith(".") ? value.toLowerCase() : `.${value.toLowerCase()}`,
+    );
+    const extensionAllowed =
+      assignment.allow_any_file_extension !== false ||
+      (extension.length > 0 && allowedExtensions.includes(extension));
+    if (!extensionAllowed) {
+      return { status: "error", error: t("errors.fileType", { formats: allowedExtensions.join(", ") }) };
     }
     if (file.size > MAX_SUBMISSION_BYTES) {
       return { status: "error", error: t("errors.fileSize") };
@@ -137,12 +169,12 @@ export async function submitAssignmentAction(
     // Upload file to storage
     filePath = `${profile.id}/${assignment.id}/${Date.now()}-${crypto
       .randomUUID()
-      .slice(0, 8)}.py`;
+      .slice(0, 8)}${extension || ".txt"}`;
 
     const { error: uploadError } = await supabase.storage
       .from("submissions")
       .upload(filePath, bytes, {
-        contentType: "text/x-python",
+        contentType: contentTypeFor(extension),
         upsert: false,
       });
 

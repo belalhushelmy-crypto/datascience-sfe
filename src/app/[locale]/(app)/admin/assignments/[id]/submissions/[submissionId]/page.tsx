@@ -7,6 +7,7 @@ import { CodePanel } from "@/components/code-panel";
 import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
 import { Alert, Card, CardHeader, PageHeader, badgeClass } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
+import { colabUrl, fileNameFromPath, isNotebookPath } from "@/lib/colab";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 import { gradingStatus } from "@/lib/grading/service";
@@ -156,19 +157,31 @@ export default async function SubmissionReviewPage({
               title={t("codeTitle")}
               action={
                 signedUrl ? (
-                  <a
-                    href={signedUrl}
-                    download
-                    className="text-xs font-semibold text-bronze-700 transition hover:text-bronze-600 dark:text-bronze-300"
-                  >
-                    {t("download")}
-                  </a>
+                  <span className="flex flex-wrap items-center justify-end gap-3">
+                    {isNotebookPath(data.file_path) ? (
+                      <a
+                        href={colabUrl(signedUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-primary-600 transition hover:text-primary-500 dark:text-primary-400"
+                      >
+                        {t("openInColab")}
+                      </a>
+                    ) : null}
+                    <a
+                      href={signedUrl}
+                      download
+                      className="text-xs font-semibold text-bronze-700 transition hover:text-bronze-600 dark:text-bronze-300"
+                    >
+                      {t("download")}
+                    </a>
+                  </span>
                 ) : null
               }
             />
             <CodePanel
-              code={data.code_text || "# empty submission"}
-              title={`${student?.student_code ?? "submission"}.py`}
+              code={data.code_text || "No content"}
+              title={fileNameFromPath(data.file_path, `${student?.student_code ?? "submission"}.txt`)}
               maxHeight="34rem"
               className="rounded-none border-0"
             />

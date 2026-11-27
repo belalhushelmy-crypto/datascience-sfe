@@ -11,6 +11,7 @@ import {
   assignmentSchema,
   idSchema,
   parseDeadlineInput,
+  parseFileExtensions,
   submissionReviewSchema,
 } from "@/lib/validation";
 import type {
@@ -31,6 +32,8 @@ function parseAssignmentForm(formData: FormData) {
     expected_output: String(formData.get("expected_output") ?? ""),
     max_score: formData.get("max_score") ?? 100,
     allow_resubmit: formData.get("allow_resubmit") === "on",
+    allowed_file_extensions: String(formData.get("allowed_file_extensions") ?? ""),
+    allow_any_file_extension: formData.get("allow_any_file_extension") === "on",
   });
 }
 
@@ -77,6 +80,8 @@ export async function createAssignmentAction(
       max_score: parsed.data.max_score,
       deadline: deadline.iso,
       allow_resubmit: parsed.data.allow_resubmit,
+      allowed_file_extensions: parseFileExtensions(parsed.data.allowed_file_extensions),
+      allow_any_file_extension: parsed.data.allow_any_file_extension,
       created_by: profile?.id ?? null,
     })
     .select("id")
@@ -128,6 +133,8 @@ export async function updateAssignmentAction(
       max_score: parsed.data.max_score,
       deadline: deadline.iso,
       allow_resubmit: parsed.data.allow_resubmit,
+      allowed_file_extensions: parseFileExtensions(parsed.data.allowed_file_extensions),
+      allow_any_file_extension: parsed.data.allow_any_file_extension,
     })
     .eq("id", assignmentId.data);
 
