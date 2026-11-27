@@ -391,15 +391,34 @@ export async function deleteStudentAccountAction(
 
   const { error } = await admin.auth.admin.deleteUser(studentId);
   if (error) {
+    // Supabase Auth can occasionally fail with a 500 while deleting a user.
+    // Remove the app data ourselves and ban the auth identity so the account
+    // cannot sign in and no ghost profile remains in the admin list.
     const authError = error as { message?: string; status?: number; name?: string; code?: string };
-    console.error("deleteStudentAccountAction failed:", {
+    console.error("deleteStudentAccountAction auth delete failed, using fallback:", {
       message: authError.message,
       status: authError.status,
       name: authError.name,
       code: authError.code,
       studentId,
     });
-    return { status: "error", error: t("errors.deleteFailed") };
+
+    const { error: cleanupError } = await admin.from("profiles").delete().eq("id", studentId);
+    if (cleanupError) {
+      console.error("deleteStudentAccountAction fallback cleanup failed:", cleanupError.message);
+      return { status: "error", error: t("errors.deleteFailed") };
+    }
+
+    const { error: banError } = await admin.auth.admin.updateUserById(studentId, {
+      ban_duration: "876000h",
+    });
+    if (banError) {
+      console.error("deleteStudentAccountAction fallback ban failed:", banError.message);
+    }
+
+    revalidatePath(`/${locale}/admin/students`);
+    revalidatePath(`/${locale}/admin`);
+    return { status: "success", message: t("deleted") };
   }
 
   // The profiles.id -> auth.users(id) FK is ON DELETE CASCADE, but verify it

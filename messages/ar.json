@@ -476,6 +476,7 @@
       "deleteConfirm": "سيتم حذف {name} وجميع بياناته نهائيًا. لا يمكن التراجع عن هذا.",
       "deleting": "جارٍ الحذف…",
       "accountDeleted": "تم حذف الحساب.",
+      "deleted": "تم حذف الحساب.",
       "colGradingTeacher": "معلم التصحيح",
       "assignTeacher": "تعيين معلم",
       "assignTeacherTitle": "تعيين معلم التصحيح",

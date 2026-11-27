@@ -476,6 +476,7 @@
       "deleteConfirm": "This will permanently delete {name} and all their data. This cannot be undone.",
       "deleting": "Deleting…",
       "accountDeleted": "Account deleted.",
+      "deleted": "Account deleted.",
       "colGradingTeacher": "Grading teacher",
       "assignTeacher": "Assign teacher",
       "assignTeacherTitle": "Assign grading teacher",
