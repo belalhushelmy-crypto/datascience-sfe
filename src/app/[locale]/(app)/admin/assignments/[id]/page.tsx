@@ -77,7 +77,7 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
     supabase
       .from("submissions")
       .select(
-        "id, student_id, created_at, ai_score, final_score, status, ai_graded_at, profiles(full_name, username, student_code)",
+        "id, student_id, created_at, ai_score, final_score, status, ai_graded_at, profiles!submissions_student_id_fkey(full_name, username, student_code)",
       )
       .eq("assignment_id", parsedId.data)
       .order("created_at", { ascending: false })
