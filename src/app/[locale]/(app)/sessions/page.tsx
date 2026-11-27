@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { FileText, ListChecks } from "lucide-react";
+import { FileText } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Alert, EmptyState, PageHeader, badgeClass } from "@/components/ui";
@@ -35,11 +35,11 @@ export default async function StudentSessionsPage({ params }: { params: Promise<
   const ts = await getTranslations("admin.sessions");
   const supabase = await createClient();
 
-  const [sessionsResult, materialsResult, assignmentsResult] = await Promise.all([
+  const [sessionsResult, materialsResult] = await Promise.all([
     supabase
       .from("sessions")
       .select("id, title, session_date")
-      .order("session_date", { ascending: false })
+      .order("session_date", { ascending: true })
       .limit(100)
       .returns<SessionRow[]>(),
     supabase
@@ -47,7 +47,6 @@ export default async function StudentSessionsPage({ params }: { params: Promise<
       .select("session_id, file_path")
       .limit(500)
       .returns<MaterialRow[]>(),
-    supabase.from("assignments").select("id", { count: "exact", head: true }),
   ]);
 
   const sessions = sessionsResult.data ?? [];
@@ -55,8 +54,7 @@ export default async function StudentSessionsPage({ params }: { params: Promise<
   for (const row of (materialsResult.data ?? []).filter((m) => m.file_path)) {
     fileCountBySession.set(row.session_id, (fileCountBySession.get(row.session_id) ?? 0) + 1);
   }
-  const taskCount = assignmentsResult.count ?? 0;
-  const hasError = Boolean(sessionsResult.error || materialsResult.error || assignmentsResult.error);
+  const hasError = Boolean(sessionsResult.error || materialsResult.error);
 
   return (
     <div className="space-y-6">
@@ -67,7 +65,7 @@ export default async function StudentSessionsPage({ params }: { params: Promise<
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {sessions.map((session, index) => {
-            const number = String(sessions.length - index).padStart(2, "0");
+            const number = String(index + 1).padStart(2, "0");
             const published = new Date(session.session_date).getTime() <= Date.now();
             const files = fileCountBySession.get(session.id) ?? 0;
             return (
@@ -89,10 +87,6 @@ export default async function StudentSessionsPage({ params }: { params: Promise<
                   <h3 className="text-base font-bold text-[var(--ink)]">{session.title}</h3>
                   <p className="mt-1 text-sm text-[var(--ink-muted)]">{ts("noDescription")}</p>
                   <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--ink-soft)]">
-                    <span className="inline-flex items-center gap-1.5">
-                      <ListChecks className="size-3.5" aria-hidden="true" />
-                      {formatNumber(taskCount, locale)} {ts("tasks")}
-                    </span>
                     <span className="inline-flex items-center gap-1.5">
                       <FileText className="size-3.5" aria-hidden="true" />
                       {formatNumber(files, locale)} {ts("files")}

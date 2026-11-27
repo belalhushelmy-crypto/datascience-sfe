@@ -1,4 +1,4 @@
-import { FileText, ListChecks } from "lucide-react";
+import { FileText } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CreateSessionForm } from "@/components/admin/create-session-form";
@@ -20,18 +20,18 @@ export default async function AdminSessionsPage({ params }: { params: Promise<{ 
   const tn = await getTranslations("nav");
 
   const supabase = await createClient();
-  const [overviewResult, materialsResult, assignmentsResult] = await Promise.all([
+  const [overviewResult, materialsResult] = await Promise.all([
     supabase.rpc("admin_session_overview"),
     supabase.from("session_materials").select("session_id"),
-    supabase.from("assignments").select("id", { count: "exact", head: true }),
   ]);
 
-  const sessions = (overviewResult.data ?? []) as SessionSummary[];
+  const sessions = ((overviewResult.data ?? []) as SessionSummary[]).sort(
+    (a, b) => Date.parse(a.session_date) - Date.parse(b.session_date),
+  );
   const materialCountBySession = new Map<string, number>();
   for (const row of (materialsResult.data ?? []) as Array<{ session_id: string }>) {
     materialCountBySession.set(row.session_id, (materialCountBySession.get(row.session_id) ?? 0) + 1);
   }
-  const taskCount = assignmentsResult.count ?? 0;
   const today = cairoToday();
 
   return (
@@ -58,7 +58,7 @@ export default async function AdminSessionsPage({ params }: { params: Promise<{ 
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {sessions.map((session, index) => {
-            const number = String(sessions.length - index).padStart(2, "0");
+            const number = String(index + 1).padStart(2, "0");
             const published = new Date(session.session_date).getTime() <= new Date(today).getTime();
             const files = materialCountBySession.get(session.id) ?? 0;
 
@@ -91,10 +91,6 @@ export default async function AdminSessionsPage({ params }: { params: Promise<{ 
                   <h3 className="text-base font-bold text-[var(--ink)]">{session.title}</h3>
                   <p className="mt-1 text-sm text-[var(--ink-muted)]">{t("noDescription")}</p>
                   <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--ink-soft)]">
-                    <span className="inline-flex items-center gap-1.5">
-                      <ListChecks className="size-3.5" aria-hidden="true" />
-                      {formatNumber(taskCount, locale)} {t("tasks")}
-                    </span>
                     <span className="inline-flex items-center gap-1.5">
                       <FileText className="size-3.5" aria-hidden="true" />
                       {formatNumber(files, locale)} {t("files")}
