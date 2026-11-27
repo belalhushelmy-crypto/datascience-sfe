@@ -3,8 +3,6 @@ import { ArrowUpRight, CalendarCheck2, CheckCircle2, Megaphone, TriangleAlert, U
 import { Link } from "@/i18n/navigation";
 import { BentoTile, EmptyState, PageHeader, ScoreRing, StatCard, buttonSecondary } from "@/components/ui";
 import { Stagger, StaggerItem } from "@/components/motion/reveal";
-import { LeaderboardBoard } from "@/components/leaderboard-board";
-import { loadLeaderboard } from "@/lib/leaderboard-data";
 import { requireHr } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
@@ -32,7 +30,6 @@ export default async function HrOverviewPage({ params }: { params: Promise<{ loc
   setRequestLocale(locale);
   await requireHr(locale);
   const t = await getTranslations("hr");
-  const tl = await getTranslations("leaderboard");
 
   const supabase = await createClient();
   const [overviewResult, sessionsResult] = await Promise.all([
@@ -44,8 +41,6 @@ export default async function HrOverviewPage({ params }: { params: Promise<{ loc
       .limit(1)
       .returns<SessionRow[]>(),
   ]);
-
-  const leaderboard = await loadLeaderboard(supabase);
 
   const rows = (overviewResult.data ?? []) as OverviewRow[];
   const latestSession = (sessionsResult.data ?? [])[0] ?? null;
@@ -101,16 +96,6 @@ export default async function HrOverviewPage({ params }: { params: Promise<{ loc
 
   return (
     <div className="space-y-5">
-      <LeaderboardBoard
-        allEntries={leaderboard.allEntries}
-        weekEntries={leaderboard.weekEntries}
-        locale={locale}
-        total={leaderboard.allEntries.length}
-        weeklyHint={tl("weeklyBoardHint", {
-          date: formatDate(leaderboard.weeklyResetAt ?? new Date(), locale),
-        })}
-      />
-
       <PageHeader
         eyebrow="hr.overview"
         title={t("overviewTitle")}
