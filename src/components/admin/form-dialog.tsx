@@ -4,6 +4,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { buttonPrimary } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 export function FormDialog({
   trigger,
@@ -33,26 +34,23 @@ export function FormDialog({
         onClick={(event) => {
           if (event.target === dialogRef.current) dialogRef.current?.close();
         }}
-        className="m-auto max-h-[90vh] w-[calc(100%-2rem)] overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-0 text-[var(--ink)] shadow-2xl backdrop:bg-slate-950/70"
-        aria-labelledby="form-dialog-title"
+        className={cn(
+          "m-auto max-h-[90vh] w-[calc(100%-2rem)] overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-0 text-[var(--ink)] shadow-2xl backdrop:bg-slate-950/70",
+          wide ? "max-w-4xl" : "max-w-lg",
+        )}
+        aria-label={title}
       >
         {open ? (
-          <div className="relative p-5 sm:p-6">
+          <div className="relative p-3 sm:p-4">
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
               aria-label={tc("close")}
-              className="absolute end-4 top-4 grid size-8 place-items-center rounded-lg text-[var(--ink-muted)] transition hover:bg-[var(--glass-inset)] hover:text-[var(--ink)]"
+              className="absolute end-3 top-3 z-10 grid size-8 place-items-center rounded-lg bg-[var(--bg)]/80 text-[var(--ink-muted)] backdrop-blur transition hover:bg-[var(--glass-inset)] hover:text-[var(--ink)]"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
-            <div className="pe-10">
-              <h2 id="form-dialog-title" className="text-xl font-bold tracking-tight text-[var(--ink)]">
-                {title}
-              </h2>
-              {description ? <p className="mt-1 text-sm text-[var(--ink-muted)]">{description}</p> : null}
-            </div>
-            <div className={`mt-5 ${wide ? "max-w-3xl" : "max-w-xl"}`}>{children}</div>
+            <div className="w-full">{children}</div>
           </div>
         ) : null}
       </dialog>
