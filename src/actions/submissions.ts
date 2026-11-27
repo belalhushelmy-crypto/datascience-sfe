@@ -6,6 +6,9 @@ import { getTranslations } from "next-intl/server";
 import { getCurrentProfile } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { deleteNotebookFromGithub } from "@/lib/notebook-github";
+import { deleteNotebookFromDrive } from "@/lib/drive";
 import {
   idSchema,
   MAX_SUBMISSION_BYTES,
@@ -270,4 +273,88 @@ export async function submitAssignmentAction(
     grading: "queued",
     score: null,
   };
+}
+
+export type DeleteSubmissionState =
+  | { status: "idle" }
+  | { status: "error"; error: string }
+  | { status: "success"; message: string };
+
+/** Students may withdraw their own attempt only while the assignment is open. */
+export async function deleteSubmissionAction(
+  _previous: DeleteSubmissionState,
+  formData: FormData,
+): Promise<DeleteSubmissionState> {
+  const locale = toLocale(formData.get("locale"));
+  const t = await getTranslations({ locale, namespace: "assignments" });
+
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== "student") {
+    return { status: "error", error: t("errors.forbidden") };
+  }
+
+  const parsedId = idSchema.safeParse(formData.get("submission_id"));
+  if (!parsedId.success) {
+    return { status: "error", error: t("errors.invalid") };
+  }
+
+  const admin = createAdminClient();
+  const { data: submission } = await admin
+    .from("submissions")
+    .select("id, student_id, assignment_id, file_path, notebook_github_path, notebook_drive_file_id")
+    .eq("id", parsedId.data)
+    .maybeSingle()
+    .returns<{
+      id: string;
+      student_id: string;
+      assignment_id: string;
+      file_path: string | null;
+      notebook_github_path: string | null;
+      notebook_drive_file_id: string | null;
+    } | null>();
+
+  if (!submission || submission.student_id !== profile.id) {
+    return { status: "error", error: t("errors.notFound") };
+  }
+
+  const { data: assignment } = await admin
+    .from("assignments")
+    .select("deadline")
+    .eq("id", submission.assignment_id)
+    .maybeSingle()
+    .returns<{ deadline: string | null } | null>();
+
+  if (assignment?.deadline && Date.parse(assignment.deadline) <= Date.now()) {
+    return { status: "error", error: t("errors.deadlinePassed") };
+  }
+
+  if (submission.notebook_github_path) {
+    await deleteNotebookFromGithub(submission.notebook_github_path).catch((error) =>
+      console.error("deleteSubmissionAction github cleanup failed:", error),
+    );
+  }
+  if (submission.notebook_drive_file_id) {
+    await deleteNotebookFromDrive(submission.notebook_drive_file_id).catch((error) =>
+      console.error("deleteSubmissionAction drive cleanup failed:", error),
+    );
+  }
+  if (submission.file_path) {
+    await admin.storage.from("submissions").remove([submission.file_path]);
+  }
+
+  const { error } = await admin.from("submissions").delete().eq("id", submission.id);
+  if (error) {
+    console.error("deleteSubmissionAction failed:", error.message);
+    return { status: "error", error: t("errors.removeFailed") };
+  }
+
+  revalidatePath(`/${locale}/assignments`);
+  revalidatePath(`/${locale}/assignments/${submission.assignment_id}`);
+  revalidatePath(`/${locale}/dashboard`);
+  revalidatePath(`/${locale}/progress`);
+  revalidatePath(`/${locale}/leaderboard`);
+  revalidatePath(`/${locale}/admin/assignments`);
+  revalidatePath(`/${locale}/admin/assignments/${submission.assignment_id}`);
+
+  return { status: "success", message: t("attemptRemoved") };
 }

@@ -50,6 +50,16 @@ async function accessToken(cfg: DriveConfig): Promise<string> {
   return json.access_token;
 }
 
+export async function deleteNotebookFromDrive(fileId: string): Promise<void> {
+  const cfg = config();
+  if (!cfg) return;
+  const token = await accessToken(cfg);
+  await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+    method: "DELETE",
+    headers: { authorization: `Bearer ${token}` },
+  });
+}
+
 export function colabDriveUrl(fileId: string): string {
   return `https://colab.research.google.com/drive/${fileId}`;
 }

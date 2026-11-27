@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Alert, Card, CardHeader, EmptyState, PageHeader, StatCard, badgeClass } from "@/components/ui";
 import { SubmissionForm } from "@/components/submission-form";
+import { RemoveSubmissionButton } from "@/components/remove-submission-button";
 import { GradingStatusWatcher } from "@/components/grading-status-watcher";
 import { CodePanel } from "@/components/code-panel";
 import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
@@ -95,6 +96,7 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
   if (attemptsError) console.error("[student assignment] attempts error:", attemptsError);
   const attempts = attemptsData ?? [];
   const maxScore = Number(assignment.max_score) || 100;
+  const canRemoveAttempt = !assignment.deadline || Date.parse(assignment.deadline) > Date.now();
 
   const paths = attempts.map((attempt) => attempt.file_path).filter(Boolean);
   const signedResult =
@@ -287,6 +289,9 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
                           timeStyle: "short",
                         })}
                       </span>
+                      {canRemoveAttempt ? (
+                        <RemoveSubmissionButton submissionId={attempt.id} locale={locale} />
+                      ) : null}
                     </div>
                   </div>
 

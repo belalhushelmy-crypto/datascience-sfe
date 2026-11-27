@@ -10,6 +10,38 @@ export function isGithubConfigured(): boolean {
   return Boolean((process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? "").trim());
 }
 
+export async function deleteNotebookFromGithub(path: string): Promise<void> {
+  const token = (process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? "").trim();
+  if (!token) return;
+
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+  const get = await fetch(url, {
+    headers: {
+      authorization: `Bearer ${token}`,
+      accept: "application/vnd.github+json",
+      "x-github-api-version": "2022-11-28",
+    },
+  });
+  if (!get.ok) return;
+  const file = (await get.json()) as { sha?: string };
+  if (!file.sha) return;
+
+  await fetch(url, {
+    method: "DELETE",
+    headers: {
+      authorization: `Bearer ${token}`,
+      accept: "application/vnd.github+json",
+      "content-type": "application/json",
+      "x-github-api-version": "2022-11-28",
+    },
+    body: JSON.stringify({
+      message: `Remove withdrawn notebook ${path}`,
+      sha: file.sha,
+      branch: BRANCH,
+    }),
+  });
+}
+
 export function colabGithubUrl(path: string): string {
   return `https://colab.research.google.com/github/${REPO_OWNER}/${REPO_NAME}/blob/${BRANCH}/${path}`;
 }
