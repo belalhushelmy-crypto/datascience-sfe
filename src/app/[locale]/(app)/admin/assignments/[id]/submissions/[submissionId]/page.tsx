@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { GradeSubmissionButton } from "@/components/admin/grade-submission-button";
 import { ReviewForm } from "@/components/admin/review-form";
 import { CodePanel } from "@/components/code-panel";
-import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
+import { CompilerMessage } from "@/components/compiler-message";
 import { Alert, Card, CardHeader, PageHeader, badgeClass } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
 import { colabUrl, isNotebookPath } from "@/lib/colab";
@@ -255,31 +255,7 @@ export default async function SubmissionReviewPage({
                   {data.grading_error.slice(0, 300)}
                 </CompilerMessage>
               ) : null}
-
-              {data.ai_feedback === null && data.ai_feedback_ar === null ? (
-                <Alert tone="info">{t("aiMissing")}</Alert>
-              ) : (
-                <>
-                  <div>
-                    <p className="caption-code mb-2">{t("feedbackEn")}</p>
-                    <CompilerMessage tone="info" label="ai.feedback">
-                      {data.ai_feedback ?? "—"}
-                    </CompilerMessage>
-                  </div>
-                  <div>
-                    <p className="caption-code mb-2">{t("feedbackAr")}</p>
-                    <div dir="rtl">
-                      <CompilerMessage tone="info" label="ai.feedback.ar">
-                        {data.ai_feedback_ar ?? "—"}
-                      </CompilerMessage>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="caption-code mb-2">{t("issues")}</p>
-                    <DiagnosticList items={issues} label="diagnostics" empty={t("noIssues")} />
-                  </div>
-                </>
-              )}
+              <p className="text-sm leading-relaxed text-[var(--ink-muted)]">{t("feedbackEditHint")}</p>
             </div>
           </Card>
         </div>

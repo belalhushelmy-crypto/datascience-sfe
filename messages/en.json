@@ -753,6 +753,7 @@
       "approveHint": "Uncheck to keep the grade and feedback hidden.",
       "feedbackApproved": "Released to student",
       "feedbackPending": "Awaiting approval",
+      "feedbackEditHint": "Review and edit the grade and bilingual feedback below before releasing it to the student.",
       "notebookHint": "Notebook file kept as an .ipynb file. Use the Colab link to open and run it.",
       "binaryFileHint": "Image or PDF file. Download it to view; your teacher reviews it manually.",
       "aiTitle": "AI grading",
