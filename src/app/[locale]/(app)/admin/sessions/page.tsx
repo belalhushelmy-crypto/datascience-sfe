@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CreateSessionForm } from "@/components/admin/create-session-form";
+import { FormDialog } from "@/components/admin/form-dialog";
 import { Alert, Card, CardHeader, EmptyState, PageHeader, buttonSecondary } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
@@ -34,15 +35,18 @@ export default async function AdminSessionsPage({ params }: { params: Promise<{ 
         title={t("title")}
         description={t("subtitle")}
         action={
-          <Link href="/admin" className={buttonSecondary}>
-            {tn("overview")}
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href="/admin" className={buttonSecondary}>
+              {tn("overview")}
+            </Link>
+            <FormDialog trigger={t("createTitle")} title={t("createTitle")} description={t("createSubtitle")}>
+              <CreateSessionForm locale={locale} today={today} />
+            </FormDialog>
+          </div>
         }
       />
 
-      <div className="grid items-start gap-6 lg:grid-cols-[22rem_1fr]">
-        <CreateSessionForm locale={locale} today={today} />
-
+      <div className="space-y-6">
         <Card>
           <CardHeader title={t("listTitle")} />
           {error ? (

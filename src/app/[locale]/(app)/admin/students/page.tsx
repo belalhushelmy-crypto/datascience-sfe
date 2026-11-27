@@ -7,12 +7,13 @@ import { ResetPasswordDialog } from "@/components/admin/reset-password-dialog";
 import { ChangeRoleDialog } from "@/components/admin/change-role-dialog";
 import { GradingTeacherDialog } from "@/components/admin/grading-teacher-dialog";
 import { ManualPointsDialog } from "@/components/admin/manual-points-dialog";
+import { FormDialog } from "@/components/admin/form-dialog";
 import { DeleteAccountDialog } from "@/components/admin/delete-account-dialog";
 import { Alert, Card, CardHeader, EmptyState, PageHeader, buttonSecondary, inputClass } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
-import { formatDate, formatNumber, initials } from "@/lib/utils";
+import { compareStudentNames, formatDate, formatNumber, initials } from "@/lib/utils";
 import type { StudentMetric } from "@/lib/types";
 
 type StudentRow = {
@@ -64,6 +65,9 @@ export default async function AdminStudentsPage({
   }
 
   const { data: students, error } = await request.returns<StudentRow[]>();
+  const sortedStudents = [...(students ?? [])].sort((a, b) =>
+    compareStudentNames(a.full_name, b.full_name),
+  );
 
   const { data: teacherRows } = await supabase
     .from("profiles")
@@ -85,13 +89,18 @@ export default async function AdminStudentsPage({
       <PageHeader
         title={t("title")}
         description={t("subtitle")}
-        action={<CsvDownloadButton locale={locale} kind="students" label={t("exportCsv")} />}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <FormDialog trigger={t("addTitle")} title={t("addTitle")} description={t("addSubtitle")} wide>
+              <CreateStudentForm locale={locale} />
+            </FormDialog>
+            <FormDialog trigger={t("importTitle")} title={t("importTitle")} description={t("importSubtitle")} wide>
+              <CsvImportForm locale={locale} />
+            </FormDialog>
+            <CsvDownloadButton locale={locale} kind="students" label={t("exportCsv")} />
+          </div>
+        }
       />
-
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        <CreateStudentForm locale={locale} />
-        <CsvImportForm locale={locale} />
-      </div>
 
       <Card>
         <CardHeader title={t("listTitle")} />
@@ -168,7 +177,7 @@ export default async function AdminStudentsPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--line)]">
-                  {students.map((student) => {
+                  {sortedStudents.map((student) => {
                     const metric = metricById.get(student.id);
                     return (
                       <tr key={student.id}>

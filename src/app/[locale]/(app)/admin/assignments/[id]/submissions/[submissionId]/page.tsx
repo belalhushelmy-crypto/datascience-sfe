@@ -7,8 +7,8 @@ import { CodePanel } from "@/components/code-panel";
 import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
 import { Alert, Card, CardHeader, PageHeader, badgeClass } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
-import { colabUrl, fileNameFromPath, isNotebookPath } from "@/lib/colab";
-import { isBinaryPath } from "@/lib/file-types";
+import { colabUrl, isNotebookPath } from "@/lib/colab";
+import { displayFileName, isBinaryPath } from "@/lib/file-types";
 import { colabGithubUrl, ensureNotebookGithubPath } from "@/lib/notebook-github";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
@@ -195,7 +195,7 @@ export default async function SubmissionReviewPage({
               <div className="p-6">
                 <p className="caption-code">jupyter notebook</p>
                 <p className="mt-2 break-all font-mono text-sm text-[var(--ink)]">
-                  {fileNameFromPath(data.file_path, "notebook.ipynb")}
+                  {displayFileName(data.file_path, "notebook.ipynb")}
                 </p>
                 <p className="mt-2 text-xs leading-relaxed text-[var(--ink-muted)]">{t("notebookHint")}</p>
               </div>
@@ -203,14 +203,14 @@ export default async function SubmissionReviewPage({
               <div className="p-6">
                 <p className="caption-code">file</p>
                 <p className="mt-2 break-all font-mono text-sm text-[var(--ink)]">
-                  {fileNameFromPath(data.file_path, "submission")}
+                  {displayFileName(data.file_path, "submission")}
                 </p>
                 <p className="mt-2 text-xs leading-relaxed text-[var(--ink-muted)]">{t("binaryFileHint")}</p>
               </div>
             ) : (
               <CodePanel
                 code={data.code_text || "No content"}
-                title={fileNameFromPath(data.file_path, `${student?.student_code ?? "submission"}.txt`)}
+                title={displayFileName(data.file_path, `${student?.student_code ?? "submission"}.txt`)}
                 maxHeight="34rem"
                 className="rounded-none border-0"
               />

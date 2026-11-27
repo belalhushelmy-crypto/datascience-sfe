@@ -13,3 +13,8 @@ export function fileNameFromPath(path: string | null | undefined, fallback: stri
   const name = path?.split("/").pop();
   return name && name.length > 0 ? name : fallback;
 }
+
+/** Strips the generated `<timestamp>-<uuid8>-` upload prefix. */
+export function displayFileName(path: string | null | undefined, fallback: string): string {
+  return fileNameFromPath(path, fallback).replace(/^\d+-[0-9a-f]{8}-/i, "");
+}

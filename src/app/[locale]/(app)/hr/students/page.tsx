@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { requireHr } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
-import { formatDate, formatNumber } from "@/lib/utils";
+import { compareStudentNames, formatDate, formatNumber } from "@/lib/utils";
 import { Card, CardHeader, EmptyState, PageHeader, buttonSecondary, inputClass, buttonPrimary } from "@/components/ui";
 import { setAbsenceThresholdAction } from "@/actions/hr";
 
@@ -45,7 +45,9 @@ export default async function HrStudentsPage({
   const { data, error } = await supabase.rpc("hr_students_overview", {
     p_search: search || null,
   });
-  const rows = (data ?? []) as OverviewRow[];
+  const rows = ((data ?? []) as OverviewRow[]).sort((a, b) =>
+    compareStudentNames(a.full_name, b.full_name),
+  );
 
   const threshold = (await supabase.rpc("hr_get_setting", { p_key: "absence_threshold" })).data ?? "3";
   const isAdmin = profile.role === "admin";

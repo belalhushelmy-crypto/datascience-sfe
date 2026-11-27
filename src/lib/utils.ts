@@ -62,6 +62,17 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+/**
+ * Student order: Latin-script names first (A→Z), then Arabic names (أ→ي).
+ */
+export function compareStudentNames(a: string, b: string): number {
+  const isLatin = (name: string) => /^\p{Script=Latin}/u.test(name.trim());
+  const aLatin = isLatin(a);
+  const bLatin = isLatin(b);
+  if (aLatin !== bLatin) return aLatin ? -1 : 1;
+  return a.localeCompare(b, aLatin ? "en" : "ar", { sensitivity: "base", numeric: true });
+}
+
 /** Safely read a JSONB array of strings (AI issues) without trusting its shape. */
 export function stringList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];

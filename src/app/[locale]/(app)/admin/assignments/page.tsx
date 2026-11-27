@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { AssignmentForm } from "@/components/admin/assignment-form";
+import { FormDialog } from "@/components/admin/form-dialog";
 import { Alert, Card, CardHeader, EmptyState, PageHeader, buttonSecondary } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
@@ -57,7 +58,15 @@ export default async function AdminAssignmentsPage({ params }: { params: Promise
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader
+        title={t("title")}
+        description={t("subtitle")}
+        action={
+          <FormDialog trigger={t("createTitle")} title={t("createTitle")} description={t("createSubtitle")} wide>
+            <AssignmentForm locale={locale} mode="create" />
+          </FormDialog>
+        }
+      />
 
       {hasError ? (
         <Alert>
@@ -69,8 +78,6 @@ export default async function AdminAssignmentsPage({ params }: { params: Promise
           )}
         </Alert>
       ) : null}
-
-      <AssignmentForm locale={locale} mode="create" />
 
       <Card>
         <CardHeader title={t("listTitle")} />

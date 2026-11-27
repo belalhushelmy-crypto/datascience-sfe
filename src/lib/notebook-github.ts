@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { displayFileName } from "@/lib/file-types";
 
 const REPO_OWNER = "belalhushelmy-crypto";
 const REPO_NAME = "datascience-sfe";
@@ -74,7 +75,7 @@ export async function ensureNotebookGithubPath(
     throw new Error(downloadError?.message ?? "Could not download the notebook");
   }
 
-  const originalName = filePath.split("/").pop() ?? "notebook.ipynb";
+  const originalName = displayFileName(filePath, "notebook.ipynb");
   const safeName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
   const path = `${NOTEBOOK_DIR}/${submissionId}-${safeName.toLowerCase().endsWith(".ipynb") ? safeName : `${safeName}.ipynb`}`;
   const content = Buffer.from(await blob.arrayBuffer()).toString("base64");
