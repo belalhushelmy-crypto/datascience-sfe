@@ -42,7 +42,9 @@ export async function ensureNotebookGithubPath(
     throw new Error(downloadError?.message ?? "Could not download the notebook");
   }
 
-  const path = `${NOTEBOOK_DIR}/${submissionId}.ipynb`;
+  const originalName = filePath.split("/").pop() ?? "notebook.ipynb";
+  const safeName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
+  const path = `${NOTEBOOK_DIR}/${submissionId}-${safeName.toLowerCase().endsWith(".ipynb") ? safeName : `${safeName}.ipynb`}`;
   const content = Buffer.from(await blob.arrayBuffer()).toString("base64");
   const response = await fetch(
     `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`,

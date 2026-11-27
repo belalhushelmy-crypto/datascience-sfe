@@ -166,10 +166,15 @@ export async function submitAssignmentAction(
       return { status: "error", error: t("errors.fileSize") };
     }
 
-    // Upload file to storage
+    // Upload file to storage, keeping a readable (sanitized) original name.
+    const originalName = file.name.split(/[\\/]/).pop() || "submission";
+    const safeName = originalName
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/\.+/g, ".")
+      .slice(-80);
     filePath = `${profile.id}/${assignment.id}/${Date.now()}-${crypto
       .randomUUID()
-      .slice(0, 8)}${extension || ".txt"}`;
+      .slice(0, 8)}-${safeName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("submissions")
