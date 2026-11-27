@@ -35,6 +35,10 @@ type AssignmentRow = {
 /** Maximum resubmits/attempts from one student per 10 minutes. */
 const UPLOAD_LIMIT = 5;
 const UPLOAD_WINDOW_MS = 10 * 60_000;
+const MAX_BINARY_BYTES = 10 * 1024 * 1024;
+const BINARY_EXTENSIONS = new Set([
+  ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".tiff", ".pdf",
+]);
 
 function extensionOf(fileName: string): string {
   const index = fileName.lastIndexOf(".");
@@ -122,6 +126,7 @@ export async function submitAssignmentAction(
 
   let codeText: string;
   let filePath: string | null = null;
+  let isBinaryFile = false;
 
   if (submissionType === "text") {
     const code = formData.get("code_text") as string | null;
@@ -149,24 +154,31 @@ export async function submitAssignmentAction(
     if (!extensionAllowed) {
       return { status: "error", error: t("errors.fileType", { formats: allowedExtensions.join(", ") }) };
     }
-    if (file.size > MAX_SUBMISSION_BYTES) {
-      return { status: "error", error: t("errors.fileSize") };
+    isBinaryFile = BINARY_EXTENSIONS.has(extension);
+    const maxBytes = isBinaryFile ? MAX_BINARY_BYTES : MAX_SUBMISSION_BYTES;
+
+    if (file.size > maxBytes) {
+      return { status: "error", error: t(isBinaryFile ? "errors.fileSizeLarge" : "errors.fileSize") };
     }
 
     const bytes = new Uint8Array(await file.arrayBuffer());
-    if (bytes.byteLength > MAX_SUBMISSION_BYTES) {
-      return { status: "error", error: t("errors.fileSize") };
+    if (bytes.byteLength > maxBytes) {
+      return { status: "error", error: t(isBinaryFile ? "errors.fileSizeLarge" : "errors.fileSize") };
     }
 
-    codeText = new TextDecoder("utf-8").decode(bytes);
-    if (bytes.includes(0) || codeText.includes("\uFFFD")) {
-      return { status: "error", error: t("errors.fileNotText") };
-    }
-    if (!codeText.trim()) {
-      return { status: "error", error: t("errors.fileEmpty") };
-    }
-    if (codeText.length > MAX_SUBMISSION_CHARS) {
-      return { status: "error", error: t("errors.fileSize") };
+    if (isBinaryFile) {
+      codeText = `[${file.name}]`;
+    } else {
+      codeText = new TextDecoder("utf-8").decode(bytes);
+      if (bytes.includes(0) || codeText.includes("\uFFFD")) {
+        return { status: "error", error: t("errors.fileNotText") };
+      }
+      if (!codeText.trim()) {
+        return { status: "error", error: t("errors.fileEmpty") };
+      }
+      if (codeText.length > MAX_SUBMISSION_CHARS) {
+        return { status: "error", error: t("errors.fileSize") };
+      }
     }
 
     // Upload file to storage, keeping a readable (sanitized) original name.
@@ -226,16 +238,21 @@ export async function submitAssignmentAction(
     };
   }
 
-  // The database trigger enqueues one job per submission. This RPC is a
-  // safety net for databases where the trigger migration has not run yet.
-  const { error: enqueueError } = await supabase.rpc("enqueue_grading_job", {
-    p_submission: inserted.id,
-  });
-  if (enqueueError) {
-    console.error(
-      "submitAssignmentAction enqueue failed:",
-      enqueueError.message,
-    );
+  // Images/PDFs are reviewed by a teacher, not by the text-based AI grader.
+  if (isBinaryFile) {
+    await markGradingUnavailable(inserted.id);
+  } else {
+    // The database trigger enqueues one job per submission. This RPC is a
+    // safety net for databases where the trigger migration has not run yet.
+    const { error: enqueueError } = await supabase.rpc("enqueue_grading_job", {
+      p_submission: inserted.id,
+    });
+    if (enqueueError) {
+      console.error(
+        "submitAssignmentAction enqueue failed:",
+        enqueueError.message,
+      );
+    }
   }
 
   revalidatePath(`/${locale}/assignments`);
@@ -243,6 +260,15 @@ export async function submitAssignmentAction(
   revalidatePath(`/${locale}/dashboard`);
   revalidatePath(`/${locale}/admin/assignments`);
   revalidatePath(`/${locale}/admin/assignments/${assignment.id}`);
+
+  if (isBinaryFile) {
+    return {
+      status: "success",
+      message: t("submittedFileOnly"),
+      grading: "failed",
+      score: null,
+    };
+  }
 
   if (!isGradingConfigured()) {
     await markGradingUnavailable(inserted.id);

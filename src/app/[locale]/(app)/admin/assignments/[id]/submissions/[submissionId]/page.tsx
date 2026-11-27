@@ -8,6 +8,7 @@ import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
 import { Alert, Card, CardHeader, PageHeader, badgeClass } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
 import { colabUrl, fileNameFromPath, isNotebookPath } from "@/lib/colab";
+import { isBinaryPath } from "@/lib/file-types";
 import { colabGithubUrl, ensureNotebookGithubPath } from "@/lib/notebook-github";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
@@ -197,6 +198,14 @@ export default async function SubmissionReviewPage({
                   {fileNameFromPath(data.file_path, "notebook.ipynb")}
                 </p>
                 <p className="mt-2 text-xs leading-relaxed text-[var(--ink-muted)]">{t("notebookHint")}</p>
+              </div>
+            ) : isBinaryPath(data.file_path) ? (
+              <div className="p-6">
+                <p className="caption-code">file</p>
+                <p className="mt-2 break-all font-mono text-sm text-[var(--ink)]">
+                  {fileNameFromPath(data.file_path, "submission")}
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-[var(--ink-muted)]">{t("binaryFileHint")}</p>
               </div>
             ) : (
               <CodePanel

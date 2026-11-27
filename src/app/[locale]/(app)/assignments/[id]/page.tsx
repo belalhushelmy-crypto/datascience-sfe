@@ -9,6 +9,7 @@ import { CodePanel } from "@/components/code-panel";
 import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
 import { requireProfile } from "@/lib/auth";
 import { colabUrl, isNotebookPath, fileNameFromPath } from "@/lib/colab";
+import { isBinaryPath } from "@/lib/file-types";
 import { colabGithubUrl, ensureNotebookGithubPath } from "@/lib/notebook-github";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
@@ -349,6 +350,14 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
                             {fileNameFromPath(attempt.file_path, "notebook.ipynb")}
                           </p>
                           <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("notebookHint")}</p>
+                        </div>
+                      ) : isBinaryPath(attempt.file_path) ? (
+                        <div className="rounded-xl border border-[var(--line)] bg-[var(--glass-inset)] p-4">
+                          <p className="caption-code">file</p>
+                          <p className="mt-1 break-all font-mono text-xs text-[var(--ink)]">
+                            {fileNameFromPath(attempt.file_path, "submission")}
+                          </p>
+                          <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("binaryFileHint")}</p>
                         </div>
                       ) : (
                         <CodePanel
