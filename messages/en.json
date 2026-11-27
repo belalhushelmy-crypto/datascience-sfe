@@ -1188,6 +1188,8 @@
     "issues": "What to fix",
     "showCode": "Show submitted code",
     "download": "Download file",
+    "notebookHint": "Notebook file kept as an .ipynb file. Use the Colab link to open and run it.",
+    "binaryFileHint": "Image or PDF file. Download it to view; your teacher reviews it manually.",
     "removeAttempt": "Remove attempt",
     "removingAttempt": "Removing…",
     "removeConfirm": "Remove this attempt? You can submit again before the deadline.",

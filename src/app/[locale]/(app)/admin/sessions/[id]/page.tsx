@@ -4,10 +4,10 @@ import { Link } from "@/i18n/navigation";
 import { AssignmentForm } from "@/components/admin/assignment-form";
 import { AttendanceForm } from "@/components/admin/attendance-form";
 import { FormDialog } from "@/components/admin/form-dialog";
+import { MaterialsPanel } from "@/components/admin/materials-panel";
 import { CsvDownloadButton } from "@/components/admin/csv-download-button";
 import { DeleteSessionForm } from "@/components/admin/delete-session-form";
 import { EditSessionForm } from "@/components/admin/edit-session-form";
-import { MaterialsPanel } from "@/components/admin/materials-panel";
 import { Alert, Card, CardHeader, EmptyState, PageHeader, badgeClass, buttonSecondary } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
@@ -180,6 +180,8 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
         </Card>
 
         <div className="space-y-6">
+          <MaterialsPanel locale={locale} sessionId={session.id} materials={materialsResult.data ?? []} />
+
           <Card>
             <CardHeader
               title={t("attendanceTitle")}
