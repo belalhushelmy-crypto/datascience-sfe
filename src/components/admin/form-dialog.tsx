@@ -46,7 +46,7 @@ export function FormDialog({
               type="button"
               onClick={() => dialogRef.current?.close()}
               aria-label={tc("close")}
-              className="absolute end-3 top-3 z-10 grid size-8 place-items-center rounded-lg bg-[var(--bg)]/80 text-[var(--ink-muted)] backdrop-blur transition hover:bg-[var(--glass-inset)] hover:text-[var(--ink)]"
+              className="absolute end-3 top-3 z-10 grid size-8 place-items-center rounded-lg bg-[var(--bg)] text-[var(--ink-muted)] transition hover:bg-[var(--glass-inset)] hover:text-[var(--ink)]"
             >
               <X className="size-4" aria-hidden="true" />
             </button>

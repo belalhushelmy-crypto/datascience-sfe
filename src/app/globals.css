@@ -82,9 +82,9 @@
   --ink-muted: #6b7c91;
   --line: rgb(12 36 64 / 0.11);
   --line-strong: rgb(12 36 64 / 0.18);
-  --glass: rgb(255 255 255 / 0.72);
-  --glass-strong: rgb(255 255 255 / 0.88);
-  --glass-inset: rgb(12 36 64 / 0.04);
+  --glass: #ffffff;
+  --glass-strong: #f7f9fc;
+  --glass-inset: #f1f5fa;
   --bronze-glow: rgb(181 138 91 / 0.35);
   --shadow-card: 0 22px 50px -30px rgb(6 21 32 / 0.38);
   --grid-line: rgb(12 36 64 / 0.055);
@@ -99,9 +99,9 @@
   --ink-muted: #7d90a7;
   --line: rgb(255 255 255 / 0.09);
   --line-strong: rgb(255 255 255 / 0.16);
-  --glass: rgb(255 255 255 / 0.055);
-  --glass-strong: rgb(255 255 255 / 0.085);
-  --glass-inset: rgb(255 255 255 / 0.04);
+  --glass: #0c1727;
+  --glass-strong: #12203a;
+  --glass-inset: #0f1d31;
   --bronze-glow: rgb(199 153 103 / 0.32);
   --shadow-card: 0 26px 60px -32px rgb(0 0 0 / 0.9);
   --grid-line: rgb(255 255 255 / 0.045);
@@ -204,8 +204,6 @@
     box-shadow:
       inset 0 1px 0 0 rgb(255 255 255 / 0.28),
       var(--shadow-card);
-    -webkit-backdrop-filter: blur(20px) saturate(145%);
-    backdrop-filter: blur(20px) saturate(145%);
   }
 
   .dark .glass-card {
@@ -217,8 +215,6 @@
   .glass-inset {
     border: 1px solid var(--line);
     background: var(--glass-inset);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
   }
 
   .glass-hover {

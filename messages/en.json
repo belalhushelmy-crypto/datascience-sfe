@@ -785,6 +785,8 @@
       "title": "Points & leaderboard",
       "subtitle": "Tune the points rules, manage badges and review the class ranking.",
       "openLeaderboard": "Open leaderboard",
+      "managePoints": "Points settings",
+      "weeklyBoardHint": "Current week, reset on {date}",
       "leaderboardTitle": "Class leaderboard",
       "leaderboardSubtitle": "Current standings by total points.",
       "noLeaderboard": "No leaderboard data yet.",

@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Alert, Card, CardHeader, EmptyState, PageHeader, StatCard } from "@/components/ui";
+import { Alert, Card, CardHeader, EmptyState, PageHeader, StatCard, buttonSecondary } from "@/components/ui";
+import { LeaderboardBoard } from "@/components/leaderboard-board";
 import { PointsConfigForm } from "@/components/admin/points-config-form";
 import { RecalculateBadgesButton } from "@/components/admin/recalculate-badges-button";
 import { ResetWeekButton } from "@/components/admin/reset-week-button";
@@ -7,14 +8,7 @@ import { requireAdmin } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatNumber, initials } from "@/lib/utils";
-import type { AdminPointsRow, PointsConfig } from "@/lib/types";
-
-type LeaderboardRow = {
-  rank: number;
-  display_name: string;
-  points: number;
-  weekly_points: number;
-};
+import type { AdminPointsRow, LeaderboardEntry, PointsConfig } from "@/lib/types";
 
 export default async function AdminPointsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
@@ -26,24 +20,21 @@ export default async function AdminPointsPage({ params }: { params: Promise<{ lo
   const tp = await getTranslations("progress");
 
   const supabase = await createClient();
-  const [overviewResult, configResult, leaderboardResult] = await Promise.all([
+  const [overviewResult, configResult, allBoardResult, weekBoardResult] = await Promise.all([
     supabase.rpc("admin_points_overview"),
     supabase
       .from("points_config")
       .select("homework_weight, attendance_points, on_time_bonus, streak_bonus, leaderboard_visible, weekly_reset_at")
       .eq("id", 1)
       .single<PointsConfig>(),
-    supabase
-      .from("leaderboard")
-      .select("rank, display_name, points, weekly_points")
-      .order("rank", { ascending: true })
-      .limit(20)
-      .returns<LeaderboardRow[]>(),
+    supabase.rpc("leaderboard_page", { p_period: "all" }),
+    supabase.rpc("leaderboard_page", { p_period: "week" }),
   ]);
 
-  const hasError = [overviewResult.error, configResult.error].some(Boolean);
+  const hasError = [overviewResult.error, configResult.error, allBoardResult.error, weekBoardResult.error].some(Boolean);
   const rows = (overviewResult.data ?? []) as AdminPointsRow[];
-  const leaderboard = leaderboardResult.data ?? [];
+  const allEntries = (allBoardResult.data ?? []) as LeaderboardEntry[];
+  const weekEntries = (weekBoardResult.data ?? []) as LeaderboardEntry[];
   const config = configResult.data;
 
   const points = (value: number | null | undefined) => formatNumber(Number(value ?? 0), locale, 2);
@@ -60,31 +51,20 @@ export default async function AdminPointsPage({ params }: { params: Promise<{ lo
 
       {hasError ? <Alert>{t("loadError")}</Alert> : null}
 
-      <Card>
-        <CardHeader title={t("leaderboardTitle")} description={t("leaderboardSubtitle")} />
-        {leaderboard.length === 0 ? (
-          <div className="p-5">
-            <EmptyState title={t("noLeaderboard")} />
-          </div>
-        ) : (
-          <ol className="divide-y divide-[var(--line)]">
-            {leaderboard.map((row) => (
-              <li key={row.display_name} className="flex items-center gap-4 px-5 py-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--glass-inset)] font-mono text-xs font-bold text-bronze-700 dark:text-bronze-300">
-                  {formatNumber(row.rank, locale)}
-                </span>
-                <span className="min-w-0 flex-1 truncate font-medium text-[var(--ink)]">{row.display_name}</span>
-                <span className="font-mono text-sm font-semibold tabular-nums text-[var(--ink)]">
-                  {points(row.points)}
-                </span>
-                <span className="hidden font-mono text-xs tabular-nums text-[var(--ink-muted)] sm:block">
-                  {points(row.weekly_points)}
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </Card>
+      <LeaderboardBoard
+        allEntries={allEntries}
+        weekEntries={weekEntries}
+        locale={locale}
+        total={allEntries.length}
+        weeklyHint={t("weeklyBoardHint", {
+          date: formatDate(config?.weekly_reset_at ?? new Date(), locale),
+        })}
+        action={
+          <a href="#points-rules" className={buttonSecondary}>
+            {t("managePoints")}
+          </a>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label={t("statStudents")} value={formatNumber(rows.length, locale)} />
@@ -95,7 +75,7 @@ export default async function AdminPointsPage({ params }: { params: Promise<{ lo
 
       {config ? (
         <div className="grid items-start gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+          <div id="points-rules" className="scroll-mt-20 lg:col-span-2">
             <PointsConfigForm
               locale={locale}
               config={{

@@ -98,7 +98,7 @@ export function SiteHeader({ profile }: { profile: Profile }) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[color-mix(in_oklab,var(--bg)_78%,transparent)] backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[var(--bg)]">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
           <Link
             href={home}
@@ -181,7 +181,7 @@ export function SiteHeader({ profile }: { profile: Profile }) {
       {/* Desktop: collapsible fixed left sidebar. Mobile keeps the bottom dock. */}
       <aside
         className={cn(
-          "fixed bottom-0 start-0 top-16 z-30 hidden flex-col border-e border-[var(--line)] bg-[color-mix(in_oklab,var(--bg)_92%,transparent)] backdrop-blur-xl transition-[width] duration-200 md:flex",
+          "fixed bottom-0 start-0 top-16 z-30 hidden flex-col border-e border-[var(--line)] bg-[var(--bg)] transition-[width] duration-200 md:flex",
           collapsed ? "w-[4.5rem]" : "w-60",
         )}
       >
@@ -249,7 +249,7 @@ export function SiteHeader({ profile }: { profile: Profile }) {
 
       {/* Mobile: bottom navigation, styled like a dock. */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[color-mix(in_oklab,var(--bg)_86%,transparent)] pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--bg)] pb-[env(safe-area-inset-bottom)] md:hidden"
         aria-label={tc("appName")}
       >
         <div className="flex items-stretch gap-0.5 overflow-x-auto px-2 py-1.5">

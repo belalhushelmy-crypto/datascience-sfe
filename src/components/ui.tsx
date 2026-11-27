@@ -15,7 +15,7 @@ export const buttonPrimary = cn(
 );
 
 export const buttonSecondary = cn(
-  "inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--line-strong)] bg-[var(--glass)] px-4 py-2.5 text-sm font-semibold text-[var(--ink)] backdrop-blur transition hover:-translate-y-0.5 hover:border-bronze-400/60 hover:bg-[var(--glass-strong)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60",
+  "inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--line-strong)] bg-[var(--glass)] px-4 py-2.5 text-sm font-semibold text-[var(--ink)] transition hover:-translate-y-0.5 hover:border-bronze-400/60 hover:bg-[var(--glass-strong)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60",
   focusRing,
 );
 
@@ -34,7 +34,7 @@ export const badgeClass =
 
 export const codeClass = "code-panel overflow-auto rounded-xl p-3 font-mono text-xs leading-relaxed";
 
-export const tabsClass = "inline-flex rounded-xl border border-[var(--line)] bg-[var(--glass-inset)] p-1 backdrop-blur";
+export const tabsClass = "inline-flex rounded-xl border border-[var(--line)] bg-[var(--glass-inset)] p-1";
 
 export function tabPanelClass(isActive: boolean): string {
   return cn(
@@ -137,7 +137,7 @@ export function Alert({ tone = "error", children }: { tone?: "error" | "success"
   return (
     <div
       role={tone === "error" ? "alert" : "status"}
-      className={cn("rounded-xl border px-3.5 py-2.5 font-mono text-xs leading-relaxed backdrop-blur", tones[tone])}
+      className={cn("rounded-xl border px-3.5 py-2.5 font-mono text-xs leading-relaxed", tones[tone])}
     >
       {children}
     </div>
