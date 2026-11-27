@@ -66,6 +66,7 @@ export function SiteHeader({ profile }: { profile: Profile }) {
         { href: "/hr/attendance", label: t("attendance"), icon: UserCheck },
         { href: "/hr/students", label: t("students"), icon: Users },
         { href: "/hr/warnings", label: t("warnings"), icon: TriangleAlert },
+        { href: "/leaderboard", label: t("leaderboard"), icon: Trophy },
         { href: "/hr/announcements", label: t("announcements"), icon: Megaphone },
       ]
     : isTeacherOrAdmin
@@ -81,6 +82,7 @@ export function SiteHeader({ profile }: { profile: Profile }) {
                 { href: "/admin/points", label: t("points"), icon: Star },
               ]
             : [{ href: "/admin/analytics", label: t("analytics"), icon: BarChart3 }]),
+          { href: "/leaderboard", label: t("leaderboard"), icon: Trophy },
           { href: "/admin/announcements", label: t("announcements"), icon: BellRing },
         ]
       : [
