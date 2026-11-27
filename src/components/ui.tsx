@@ -64,7 +64,7 @@ export function CardHeader({
     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
       <div className="min-w-0">
         {eyebrow ? <p className="caption-code mb-1">{eyebrow}</p> : null}
-        <h2 className="text-base font-semibold text-[var(--ink)]">{title}</h2>
+        <h2 className="text-lg font-bold tracking-tight text-[var(--ink)] sm:text-xl">{title}</h2>
         {description ? (
           <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--ink-muted)]">{description}</p>
         ) : null}
@@ -174,7 +174,7 @@ export function PageHeader({
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {eyebrow ? <p className="caption-code mb-2">{eyebrow}</p> : null}
-        <h1 className="text-balance text-2xl font-bold tracking-tight text-[var(--ink)] sm:text-3xl">{title}</h1>
+        <h1 className="text-balance text-3xl font-bold tracking-tight text-[var(--ink)] sm:text-4xl sm:font-extrabold">{title}</h1>
         {description ? (
           <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[var(--ink-muted)]">{description}</p>
         ) : null}
