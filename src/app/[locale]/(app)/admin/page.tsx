@@ -24,6 +24,8 @@ import {
   buttonSecondary,
 } from "@/components/ui";
 import { Stagger, StaggerItem } from "@/components/motion/reveal";
+import { LeaderboardBoard } from "@/components/leaderboard-board";
+import { loadLeaderboard } from "@/lib/leaderboard-data";
 import { requireStaff } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
@@ -63,6 +65,7 @@ export default async function AdminOverviewPage({ params }: { params: Promise<{ 
   const isAdmin = profile.role === "admin";
   const t = await getTranslations("admin.overview");
   const ts = await getTranslations("submissionStatus");
+  const tl = await getTranslations("leaderboard");
 
   const supabase = await createClient();
   const [students, sessions, assignments, pending, recent, pendingList, warningsCount, recentWarnings] =
@@ -98,6 +101,8 @@ export default async function AdminOverviewPage({ params }: { params: Promise<{ 
         .limit(4)
         .returns<WarningRow[]>(),
     ]);
+
+  const leaderboard = await loadLeaderboard(supabase);
 
   const hasError = [
     students.error,
@@ -173,6 +178,16 @@ export default async function AdminOverviewPage({ params }: { params: Promise<{ 
   return (
     <div className="space-y-5">
       {hasError ? <Alert>{t("loadError")}</Alert> : null}
+
+      <LeaderboardBoard
+        allEntries={leaderboard.allEntries}
+        weekEntries={leaderboard.weekEntries}
+        locale={locale}
+        total={leaderboard.allEntries.length}
+        weeklyHint={tl("weeklyBoardHint", {
+          date: formatDate(leaderboard.weeklyResetAt ?? new Date(), locale),
+        })}
+      />
 
       <PageHeader
         eyebrow="teacher.overview"

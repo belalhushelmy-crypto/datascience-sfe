@@ -168,8 +168,7 @@ export default async function SubmissionReviewPage({
         }
       />
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
           <Card className="overflow-hidden">
             <CardHeader
               title={t("codeTitle")}
@@ -272,10 +271,8 @@ export default async function SubmissionReviewPage({
             approved={Boolean(data.feedback_approved_at)}
             requireApproval={data.assignments?.require_feedback_approval ?? true}
           />
-        </div>
-      </div>
 
-      <Card>
+          <Card>
         <CardHeader title={t("regradeTitle")} description={t("regradeSubtitle")} />
         <div className="p-5">
           {grading.configured ? (
@@ -284,7 +281,8 @@ export default async function SubmissionReviewPage({
             <Alert tone="info">{t("errors.gradingNotConfigured")}</Alert>
           )}
         </div>
-      </Card>
+          </Card>
+      </div>
     </div>
   );
 }
