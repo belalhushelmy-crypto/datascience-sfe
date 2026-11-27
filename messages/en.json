@@ -1320,7 +1320,8 @@
     "title": "Session materials",
     "subtitle": "Materials shared by your teacher for each session.",
     "noMaterials": "No materials yet.",
-    "noSessions": "No sessions yet."
+    "noSessions": "No sessions yet.",
+    "download": "Download"
   },
   "csv": {
     "preparing": "Preparing…",

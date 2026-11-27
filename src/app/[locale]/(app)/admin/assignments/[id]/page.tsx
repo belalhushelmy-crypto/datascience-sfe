@@ -273,6 +273,43 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
           />
         </FormDialog>
 
+
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader title={t("gradingTitle")} description={t("gradingSubtitle")} />
+            <div className="space-y-4 p-5">
+              {grading.mock ? (
+                <Alert tone="info">{t("gradingMock")}</Alert>
+              ) : grading.configured ? (
+                <Alert tone="success">{t("gradingReady", { model: grading.model })}</Alert>
+              ) : (
+                <Alert tone="info">{t("gradingMissing")}</Alert>
+              )}
+
+              <GradePendingButton
+                locale={locale}
+                assignmentId={assignment.id}
+                pendingCount={overview?.pending_count ?? 0}
+              />
+
+              <Link
+                href="/admin/grading"
+                className="text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
+              >
+                {t("gradingSettingsLink")}
+              </Link>
+
+              {(overview?.pending_count ?? 0) === 0 ? (
+                <p className="text-sm text-[var(--ink-muted)]">{t("nothingPending")}</p>
+              ) : null}
+            </div>
+          </Card>
+
+          <DeleteAssignmentForm locale={locale} assignmentId={assignment.id} />
+        </div>
+      </div>
+
         <Card>
           <CardHeader
             title={t("submissionsTitle")}
@@ -437,41 +474,6 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
           )}
         </Card>
         </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader title={t("gradingTitle")} description={t("gradingSubtitle")} />
-            <div className="space-y-4 p-5">
-              {grading.mock ? (
-                <Alert tone="info">{t("gradingMock")}</Alert>
-              ) : grading.configured ? (
-                <Alert tone="success">{t("gradingReady", { model: grading.model })}</Alert>
-              ) : (
-                <Alert tone="info">{t("gradingMissing")}</Alert>
-              )}
-
-              <GradePendingButton
-                locale={locale}
-                assignmentId={assignment.id}
-                pendingCount={overview?.pending_count ?? 0}
-              />
-
-              <Link
-                href="/admin/grading"
-                className="text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
-              >
-                {t("gradingSettingsLink")}
-              </Link>
-
-              {(overview?.pending_count ?? 0) === 0 ? (
-                <p className="text-sm text-[var(--ink-muted)]">{t("nothingPending")}</p>
-              ) : null}
-            </div>
-          </Card>
-
-          <DeleteAssignmentForm locale={locale} assignmentId={assignment.id} />
-        </div>
-      </div>
 
       <SimilarityPanel
         locale={locale}

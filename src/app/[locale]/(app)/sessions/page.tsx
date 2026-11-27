@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { FileText, ListChecks } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Alert, Card, CardHeader, EmptyState, PageHeader } from "@/components/ui";
+import { Link } from "@/i18n/navigation";
+import { Alert, EmptyState, PageHeader, badgeClass } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate, formatNumber } from "@/lib/utils";
 
 type SessionRow = {
   id: string;
@@ -13,14 +15,12 @@ type SessionRow = {
 };
 
 type MaterialRow = {
-  id: string;
   session_id: string;
-  type: string;
-  title: string;
-  content: string | null;
   file_path: string | null;
-  mime_type: string | null;
-  language: string | null;
+};
+
+type AssignmentRow = {
+  id: string;
 };
 
 export default async function StudentSessionsPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -32,9 +32,10 @@ export default async function StudentSessionsPage({ params }: { params: Promise<
   if (profile.role === "admin") redirect(`/${locale}/admin/sessions`);
 
   const t = await getTranslations("sessions");
+  const ts = await getTranslations("admin.sessions");
   const supabase = await createClient();
 
-  const [sessionsResult, materialsResult] = await Promise.all([
+  const [sessionsResult, materialsResult, assignmentsResult] = await Promise.all([
     supabase
       .from("sessions")
       .select("id, title, session_date")
@@ -43,106 +44,63 @@ export default async function StudentSessionsPage({ params }: { params: Promise<
       .returns<SessionRow[]>(),
     supabase
       .from("session_materials")
-      .select("id, session_id, type, title, content, file_path, mime_type, language")
-      .order("created_at", { ascending: true })
+      .select("session_id, file_path")
       .limit(500)
       .returns<MaterialRow[]>(),
+    supabase.from("assignments").select("id", { count: "exact", head: true }),
   ]);
 
   const sessions = sessionsResult.data ?? [];
-  const materials = materialsResult.data ?? [];
-
-  // Generate signed URLs for file-based materials (in parallel).
-  const signedUrls = new Map<string, string>();
-  await Promise.all(
-    materials
-      .filter((m) => m.file_path)
-      .map(async (m) => {
-        const { data } = await supabase.storage.from("session-materials").createSignedUrl(m.file_path as string, 3600);
-        if (data?.signedUrl) signedUrls.set(m.id, data.signedUrl);
-      }),
-  );
-
-  const materialsBySession = new Map<string, MaterialRow[]>();
-  for (const m of materials) {
-    const list = materialsBySession.get(m.session_id) ?? [];
-    list.push(m);
-    materialsBySession.set(m.session_id, list);
+  const fileCountBySession = new Map<string, number>();
+  for (const row of (materialsResult.data ?? []).filter((m) => m.file_path)) {
+    fileCountBySession.set(row.session_id, (fileCountBySession.get(row.session_id) ?? 0) + 1);
   }
-
-  const hasError = Boolean(sessionsResult.error || materialsResult.error);
+  const taskCount = assignmentsResult.count ?? 0;
+  const hasError = Boolean(sessionsResult.error || materialsResult.error || assignmentsResult.error);
 
   return (
     <div className="space-y-6">
       <PageHeader title={t("title")} description={t("subtitle")} />
-
-      {hasError ? <Alert>{t("noSessions")}</Alert> : null}
-
+      {hasError ? <Alert>{t("noMaterials")}</Alert> : null}
       {sessions.length === 0 ? (
-        <EmptyState title={t("noSessions")} />
+        <EmptyState title={t("noMaterials")} />
       ) : (
-        <div className="space-y-6">
-          {sessions.map((session) => {
-            const mats = materialsBySession.get(session.id) ?? [];
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {sessions.map((session, index) => {
+            const number = String(sessions.length - index).padStart(2, "0");
+            const published = new Date(session.session_date).getTime() <= Date.now();
+            const files = fileCountBySession.get(session.id) ?? 0;
             return (
-              <Card key={session.id}>
-                <CardHeader
-                  title={session.title}
-                  description={formatDate(session.session_date, locale, {
-                    dateStyle: "medium",
-                  })}
-                />
-                <div className="space-y-4 p-5">
-                  {mats.length === 0 ? (
-                    <p className="text-sm text-[var(--ink-muted)]">{t("noMaterials")}</p>
-                  ) : (
-                    <ul className="space-y-3">
-                      {mats.map((m) => {
-                        const url = signedUrls.get(m.id);
-                        return (
-                          <li key={m.id} className="rounded-xl border border-[var(--line)] p-4 ">
-                            <p className="font-medium text-[var(--ink)]">{m.title}</p>
-                            <p className="text-xs text-[var(--ink-muted)]">
-                              {m.type}
-                              {m.language ? ` · ${m.language}` : ""}
-                            </p>
-
-                            {m.type === "text" && m.content ? (
-                              <p className="mt-3 whitespace-pre-wrap text-sm text-[var(--ink-soft)]">{m.content}</p>
-                            ) : null}
-
-                            {m.type === "code" && m.content ? (
-                              <pre className="code-panel mt-3 overflow-x-auto rounded-lg p-3 font-mono text-xs leading-relaxed text-slate-200" dir="ltr">
-                                <code>{m.content}</code>
-                              </pre>
-                            ) : null}
-
-                            {m.type === "image" && url ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={url} alt={m.title} loading="lazy" width={800} height={600} className="mt-3 max-h-96 w-full rounded-lg object-contain" />
-                            ) : null}
-
-                            {m.type === "video" && url ? (
-                              <video src={url} controls className="mt-3 max-h-96 w-full rounded-lg" />
-                            ) : null}
-
-                            {(m.type === "file" || m.type === "notebook") && url ? (
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-400"
-                              >
-                                {m.title}
-                              </a>
-                            ) : null}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
+              <Link
+                key={session.id}
+                href={`/sessions/${session.id}`}
+                className="group overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--glass)] transition hover:border-bronze-400/50"
+              >
+                <div className="relative flex items-start justify-between border-b border-[var(--line)] bg-[var(--glass-inset)] px-4 py-3">
+                  <span className={badgeClass}>{number}</span>
+                  <span className={cn(badgeClass, published && "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300")}>
+                    {published ? ts("published") : ts("upcoming")}
+                  </span>
+                  <span aria-hidden="true" className="pointer-events-none absolute inset-0 grid place-items-center font-mono text-5xl font-bold text-[var(--ink)]/10">
+                    {number}
+                  </span>
                 </div>
-              </Card>
+                <div className="p-4">
+                  <h3 className="text-base font-bold text-[var(--ink)]">{session.title}</h3>
+                  <p className="mt-1 text-sm text-[var(--ink-muted)]">{ts("noDescription")}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--ink-soft)]">
+                    <span className="inline-flex items-center gap-1.5">
+                      <ListChecks className="size-3.5" aria-hidden="true" />
+                      {formatNumber(taskCount, locale)} {ts("tasks")}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <FileText className="size-3.5" aria-hidden="true" />
+                      {formatNumber(files, locale)} {ts("files")}
+                    </span>
+                    <span className="ms-auto text-[var(--ink-muted)]">{formatDate(session.session_date, locale)}</span>
+                  </div>
+                </div>
+              </Link>
             );
           })}
         </div>
