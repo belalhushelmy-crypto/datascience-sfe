@@ -757,6 +757,7 @@
       "feedbackArLabel": "Feedback (Arabic)",
       "issuesLabel": "Issues (one per line)",
       "issuesHint": "Edit the AI feedback before releasing it to the student.",
+      "issuesPreview": "diagnostics",
       "approveLabel": "Approve and release to student",
       "approveHint": "Uncheck to keep the grade and feedback hidden.",
       "feedbackApproved": "Released to student",

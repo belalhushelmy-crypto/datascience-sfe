@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { reviewSubmissionAction } from "@/actions/assignments";
 import type { SubmissionReviewState, SubmissionStatus } from "@/lib/types";
 
+import { DiagnosticList } from "@/components/compiler-message";
 import { Alert, Card, CardHeader, buttonSecondary, inputClass, labelClass } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 
@@ -134,6 +135,9 @@ export function ReviewForm({
               className={inputClass}
             />
             <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("issuesHint")}</p>
+            <div className="mt-3">
+              <DiagnosticList items={issues} label={t("issuesPreview")} empty={t("noIssues")} />
+            </div>
           </div>
           {requireApproval ? (
             <label className="flex items-start gap-3 rounded-xl border border-[var(--line)] p-3 text-sm">
