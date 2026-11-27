@@ -20,14 +20,25 @@ export default async function AdminSessionsPage({ params }: { params: Promise<{ 
   const tn = await getTranslations("nav");
 
   const supabase = await createClient();
-  const [overviewResult, materialsResult] = await Promise.all([
+  const [overviewResult, sessionsResult, materialsResult] = await Promise.all([
     supabase.rpc("admin_session_overview"),
+    supabase
+      .from("sessions")
+      .select("id, title, session_date, created_at")
+      .order("session_date", { ascending: true })
+      .order("created_at", { ascending: true })
+      .limit(100)
+      .returns<Array<{ id: string; title: string; session_date: string; created_at: string }>>(),
     supabase.from("session_materials").select("session_id"),
   ]);
 
-  const sessions = ((overviewResult.data ?? []) as SessionSummary[]).sort(
-    (a, b) => Date.parse(a.session_date) - Date.parse(b.session_date),
+  const overviewById = new Map(
+    ((overviewResult.data ?? []) as SessionSummary[]).map((row) => [row.id, row]),
   );
+  const sessions = (sessionsResult.data ?? []).map((row) => ({
+    ...row,
+    ...(overviewById.get(row.id) ?? {}),
+  }));
   const materialCountBySession = new Map<string, number>();
   for (const row of (materialsResult.data ?? []) as Array<{ session_id: string }>) {
     materialCountBySession.set(row.session_id, (materialCountBySession.get(row.session_id) ?? 0) + 1);
@@ -51,7 +62,7 @@ export default async function AdminSessionsPage({ params }: { params: Promise<{ 
         }
       />
 
-      {overviewResult.error ? (
+      {overviewResult.error || sessionsResult.error ? (
         <Alert>{t("loadError")}</Alert>
       ) : sessions.length === 0 ? (
         <EmptyState title={t("empty")} />
@@ -100,7 +111,7 @@ export default async function AdminSessionsPage({ params }: { params: Promise<{ 
                     </span>
                   </div>
                   <p className="mt-3 text-xs text-[var(--ink-muted)]">
-                    {formatNumber(session.checked_in_count, locale)} / {formatNumber(session.class_size, locale)}{" "}
+                    {formatNumber(session.checked_in_count ?? 0, locale)} / {formatNumber(session.class_size ?? 0, locale)}{" "}
                     {t("checkedIn")}
                   </p>
                 </div>
