@@ -5,14 +5,14 @@ attendance, assignments, AI feedback, points, badges and a privacy-safe leaderbo
 
 Built with **Next.js (App Router) + TypeScript + Tailwind CSS + Supabase**.
 
-> **Status: feature-complete (Phases 1–6).** The teaching toolkit — announcements with
+> **Status: feature-complete (Phases 1–7).** The teaching toolkit — announcements with
 > pinned posts, CSV exports, a similarity review queue and an analytics page — is in,
 > and the final polish pass covers accessibility, seed data for the analytics views and
 > the launch checklist below.
 
 ---
 
-## 1. What is included (Phases 1–6)
+## 1. What is included (Phases 1–7)
 
 - Next.js 15 App Router project, TypeScript strict mode, Tailwind CSS v4, dark mode.
 - Bilingual UI (`next-intl`) with Arabic RTL, navbar language switcher and a
@@ -39,9 +39,11 @@ Built with **Next.js (App Router) + TypeScript + Tailwind CSS + Supabase**.
 - **Assignments & AI grading (Phase 3):**
   - teacher assignment CRUD with task, rubric, expected output, max score, deadline and resubmit policy
   - student assignment list + detail page; upload `.py` files (100 KB, UTF-8) with resubmit rules
-  - automatic grading on upload through Gemini REST (`responseSchema`, bilingual feedback, issue list)
-  - retries with backoff on 429/5xx/timeouts, strict zod re-validation, and a persisted error reason
-  - pending queue: `submissions` rows double as the queue; teacher can grade up to 3 queued attempts per click
+  - automatic grading on upload through an OpenAI-compatible API (Kilo AI Gateway by default:
+    `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL`), with bilingual feedback and an issue list
+  - fallback chain over free models, strict zod re-validation, and a persisted error reason
+  - durable `grading_jobs` queue; teacher can grade queued attempts, and `/api/cron/grading`
+    runs the same idempotent worker on a schedule
   - review page with syntax-neutral code view, English/Arabic AI feedback, issues, signed download link
   - teacher final score, status (`graded` / `flagged`), regrade, and a `graded_by` audit trail
   - per-student upload rate limit (5 per 10 minutes) and a deterministic mock grader for development
@@ -63,8 +65,8 @@ Built with **Next.js (App Router) + TypeScript + Tailwind CSS + Supabase**.
   - **CSV exports** for the student roster, one session's attendance and one assignment's
     grades — generated in admin-checked server actions, downloaded as a Blob, with a
     UTF-8 BOM and CRLF so Excel opens Arabic names correctly
-  - **Similarity check** per assignment: normalizes Python source (comments, strings and
-    preprocessor lines dropped), compares 5-token shingles with Jaccard, stores pairs at
+  - **Similarity check** per assignment: normalizes Python source (`#` comments, strings and
+    docstrings dropped), compares 5-token shingles with Jaccard, stores pairs at
     or above a configurable threshold (30–100, default 70), and lets the teacher mark a
     pair reviewed or flag both attempts
   - reviewed pairs survive recomputation; unreviewed results are replaced on the next run
@@ -187,11 +189,10 @@ npm run seed        # demo data (requires .env.local)
 
 1. Sign in as the teacher and open **Assignments**, then create one with a task,
    rubric and optional deadline (deadline input is UTC; the label says so).
-2. Sign in as a student, open the assignment and upload a small `.py` file
-   (`#include <iostream>` + `int main()` is enough to exercise the flow).
-3. With `AI_API_KEY` and `AI_BASE_URL` set, the attempt is graded immediately: score, English
-   and Arabic feedback and issues appear under **Your attempts**. Without a key,
-   set `GEMINI_MOCK=1` in development for a deterministic structural grade.
+2. Sign in as a student, open the assignment and upload a small Python sample, e.g.
+   `def add(a, b):` / `    return a + b` / `print(add(1, 2))` (with a `# comment`).
+3. With `AI_API_KEY` and `AI_BASE_URL` set, the attempt is graded through the grading queue.
+   Without a key, set `AI_MOCK=1` in development for a deterministic structural grade.
 4. Back as the teacher, open the assignment → **Submissions** → **Review**.
    Check the AI feedback, then set a final score and save; the student sees the
    new score immediately.
@@ -277,11 +278,18 @@ Notes:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | client + server        | Public key, RLS enforced                             |
 | `SUPABASE_SERVICE_ROLE_KEY`     | **server only**        | Admin user creation/reset; bypasses RLS              |
 | `AI_API_KEY`                    | **server only**        | OpenAI-compatible grading key; empty = grade manually |
-| `AI_BASE_URL`                   | **server only**        | Provider base URL, e.g. `https://api.openai.com/v1`  |
-| `AI_MODEL`                      | **server only**        | Model id, defaults to `gpt-4o-mini`                  |
+| `AI_BASE_URL`                   | **server only**        | OpenAI-compatible base URL, default `https://ai-gateway.kilo.ai/api/v1` |
+| `AI_MODEL`                      | **server only**        | Model id, defaults to `kilo-auto/free`               |
 | `AI_MOCK`                       | development only       | `1` = deterministic fake grader when no key is set   |
-| `SEED_ADMIN_PASSWORD`           | seed script            | Teacher password for `npm run seed`                  |
+| `CRON_SECRET`                   | **server only**        | Bearer token required by `/api/cron/grading`         |
+| `UPSTASH_REDIS_REST_URL`        | **server only**        | Optional shared rate-limit backend                   |
+| `UPSTASH_REDIS_REST_TOKEN`      | **server only**        | Optional shared rate-limit backend token             |
+| `SEED_ADMIN_PASSWORD`           | seed script            | Teacher password; required when seeding production   |
 | `SEED_STUDENT_PASSWORD`         | seed script            | Demo student password                                |
+| `SEED_ALLOW_PROD`               | seed script            | `1` required to seed a non-local Supabase URL        |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | client                 | Cloudflare Turnstile site key                        |
+| `TURNSTILE_SECRET_KEY`          | **server only**        | Cloudflare Turnstile secret                          |
+| `NEXT_PUBLIC_SITE_URL`           | client + server        | Absolute site URL for auth redirects                 |
 
 Never prefix secrets with `NEXT_PUBLIC_`. The service role and AI provider keys are
 only read inside server-side code and server route handlers.
@@ -347,19 +355,17 @@ Additional notes:
   to them. Column grants also block writing `ai_score` / `final_score` on insert.
 - `student_points()` is revoked from `authenticated`; only the leaderboard view
   and `my_standing()` (both definer-owned) can call it.
-- The `submissions` bucket is private; use signed URLs in Phase 3.
+- The `submissions` bucket is private; downloads use short-lived signed URLs.
 
 ### Known limits
 
-- The login, upload and check-in rate limiters are in-memory (best-effort per
-  serverless instance). Use Upstash Redis if you need hard limits.
-- Gemini grading runs inline (one attempt per upload; up to 3 per teacher click)
-  to fit the 60 s serverless limit. Very large classes should use a cron/queue
-  worker instead of the "Grade queued" button.
+- Rate limits fall back to in-memory per serverless instance unless Upstash
+  Redis is configured via `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`.
+- Grading is queued in `grading_jobs` and processed by the "Grade queued" action
+  and by the daily `/api/cron/grading` worker (protected by `CRON_SECRET`); both
+  use the same `grading_locked_at` claim logic, so runs are idempotent.
 - Attendance codes are short-lived by design. If a code leaks, generate a new one;
   the old code stops working immediately.
-- Password reset by the teacher does not revoke existing sessions; Supabase refresh
-  tokens expire normally. Add `signOut(userId, 'global')` if that becomes a requirement.
 - CSV import creates users sequentially/concurrently (5 at a time); very large
   classes should be split into batches of 200.
 
@@ -410,7 +416,7 @@ src/
     supabase/{client,server,admin}.ts
     students.ts             # service-role account creation (admin-only callers)
     grading/
-      gemini.ts             # REST client, strict JSON schema, retries/timeouts
+      provider.ts           # OpenAI-compatible chat/completions client
       service.ts            # queue claim, grade one/batch, status
       prompt.ts             # bilingual grading prompt + injection guard
       schema.ts             # zod grading response
@@ -421,6 +427,7 @@ src/
     csv-export.ts            # RFC-4180 CSV with BOM + CRLF
     similarity.ts            # token shingles + Jaccard (pure, testable)
   middleware.ts             # locale + session refresh + role route protection
+api/cron/grading/route.ts  # cron grading worker (Bearer CRON_SECRET)
 supabase/migrations/        # full schema, RLS, storage, phase 2/3/4/5 RPCs
 scripts/seed.mjs            # demo teacher/students/sessions
 messages/{en,ar}.json
@@ -432,16 +439,16 @@ messages/{en,ar}.json
 
 1. Push the repository to GitHub/GitLab.
 2. Import it in Vercel; the framework preset is detected automatically.
-3. Add the environment variables from section 4 (mark service role + Gemini as
-   sensitive; do not use `NEXT_PUBLIC_` for them). Node 20+ is required.
+3. Add the environment variables from section 4 (mark service role, AI and cron secrets
+   as sensitive; do not use `NEXT_PUBLIC_` for them). Node >= 20.6 is required.
 4. Deploy, then add the deployment URL to Supabase **Authentication → URL
    Configuration** (Site URL + redirect URLs).
-5. Run the seed only if you want demo data in production:
-   `npm run seed` locally with the production keys, or keep production clean and
-   create the teacher account manually.
-
-No `vercel.json` is needed. The app uses the Node.js runtime for server actions and
-dynamic rendering everywhere (all pages depend on auth cookies).
+5. Run the seed only if you want demo data in production: `SEED_ALLOW_PROD=1` plus an
+   explicit `SEED_ADMIN_PASSWORD` are required for a non-local Supabase URL, or keep
+   production clean and create the teacher account manually.
+6. Set `CRON_SECRET`; `vercel.json` schedules `GET /api/cron/grading` daily at 03:00
+   UTC, and the endpoint rejects any request without `Authorization: Bearer $CRON_SECRET`.
+   It reuses the same `grading_locked_at` claim logic as the manual queue action.
 
 ### Launch checklist
 
@@ -449,8 +456,8 @@ dynamic rendering everywhere (all pages depend on auth cookies).
    Site URL + redirect URLs point at the production domain; storage bucket `submissions`
    exists (private, 100 KB limit).
 2. **Secrets**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-   `SUPABASE_SERVICE_ROLE_KEY` (server-only) and `AI_API_KEY` + `AI_BASE_URL` set in Vercel; no
-   secrets in the client bundle (`NEXT_PUBLIC_` prefix only for the first two).
+   `SUPABASE_SERVICE_ROLE_KEY`, `AI_API_KEY`, `AI_BASE_URL` and `CRON_SECRET` set in Vercel;
+   no secrets in the client bundle (`NEXT_PUBLIC_` prefix only for the first two).
 3. **First login**: create the teacher account (seed or manually through Supabase
    Auth), sign in, and change the demo password immediately from **Profile**.
 4. **Smoke test in production**: log in as teacher and student; create a session,
@@ -465,7 +472,10 @@ dynamic rendering everywhere (all pages depend on auth cookies).
 
 - **Phase 1:** foundation, SQL + RLS, auth, admin students, profiles, dashboards, i18n.
 - **Phase 2:** sessions, rotating attendance codes + QR, self check-in UI, manual attendance, students table metrics.
-- **Phase 3:** assignments, `.py` uploads, Gemini grading (strict JSON, retries, queue),
-  admin review/override, per-student rate limits.
+- **Phase 3:** assignments, `.py` uploads, OpenAI-compatible grading, admin review/override,
+  per-student rate limits.
+- **Phase 4:** points engine, leaderboard, badges and breakdowns.
 - **Phase 5:** similarity checking, announcements CRUD, CSV exports, analytics, i18n polish.
-- **Phase 6 (this):** accessibility pass, seed enrichment for the analytics views, launch checklist.
+- **Phase 6:** accessibility pass, seed enrichment for the analytics views, launch checklist.
+- **Phase 7 (current):** durable grading queue and cron worker, configurable submission formats,
+  teacher-scoped grading, feedback approval, session materials and multi-file uploads.

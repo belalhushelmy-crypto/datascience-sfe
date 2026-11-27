@@ -15,7 +15,7 @@ import {
   MAX_SUBMISSION_CHARS,
   textSubmissionSchema,
 } from "@/lib/validation";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimitAsync } from "@/lib/rate-limit";
 import { isGradingConfigured } from "@/lib/grading/provider";
 import {
   markGradingUnavailable,
@@ -116,7 +116,7 @@ export async function submitAssignmentAction(
     }
   }
 
-  const limit = rateLimit(`submit:${profile.id}`, UPLOAD_LIMIT, UPLOAD_WINDOW_MS);
+  const limit = await rateLimitAsync(`submit:${profile.id}`, UPLOAD_LIMIT, UPLOAD_WINDOW_MS);
   if (!limit.ok) {
     return {
       status: "error",

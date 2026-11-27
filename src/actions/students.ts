@@ -280,6 +280,12 @@ export async function resetPasswordAction(
     return { status: "error", error: t("errors.updateFailed") };
   }
 
+  // Revoke existing sessions so the old password cannot keep working.
+  const { error: signOutError } = await admin.auth.admin.signOut(parsed.data.student_id, "global");
+  if (signOutError) {
+    console.error("resetPasswordAction signOut failed:", signOutError.message);
+  }
+
   return { status: "success", message: t("resetDone") };
 }
 

@@ -28,6 +28,25 @@ if (!url || !serviceKey) {
   process.exit(1);
 }
 
+const isProd = (() => {
+  try {
+    const host = new URL(url).hostname;
+    return host !== "localhost" && host !== "127.0.0.1" && !host.endsWith(".local");
+  } catch {
+    return false;
+  }
+})();
+
+if (isProd && process.env.SEED_ALLOW_PROD !== "1") {
+  console.error("Refusing to seed a production project. Set SEED_ALLOW_PROD=1 to override.");
+  process.exit(1);
+}
+
+if (isProd && !(process.env.SEED_ADMIN_PASSWORD ?? "").trim()) {
+  console.error("SEED_ADMIN_PASSWORD is required when seeding production.");
+  process.exit(1);
+}
+
 const admin = createClient(url, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });

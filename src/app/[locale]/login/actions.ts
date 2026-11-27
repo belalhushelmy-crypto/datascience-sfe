@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimitAsync } from "@/lib/rate-limit";
 import { safeRedirectPath, toLocale } from "@/lib/locale";
 import { loginSchema, normalizeUsername } from "@/lib/validation";
 import { verifyTurnstile } from "@/lib/turnstile";
@@ -29,7 +29,7 @@ export async function loginAction(
   const forwarded = headerList.get("x-forwarded-for") ?? "local";
   const ip = forwarded.split(",")[0]?.trim() || "local";
 
-  const limit = rateLimit(`login:${ip}:${parsed.data.username}`, 10, 60_000);
+  const limit = await rateLimitAsync(`login:${ip}:${parsed.data.username}`, 10, 60_000);
   if (!limit.ok) {
     return { error: t("tooManyAttempts") };
   }

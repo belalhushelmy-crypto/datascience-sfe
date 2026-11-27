@@ -18,6 +18,8 @@ export type CodeFingerprint = {
 
 function stripNoise(source: string): string {
   return source
+    .replace(/"""[\s\S]*?"""/g, ' "docstr" ')
+    .replace(/'''[\s\S]*?'''/g, " 'docstr' ")
     .replace(/"(?:\\.|[^"\\])*"/g, ' "str" ')
     .replace(/'(?:\\.|[^'\\])*'/g, " 'str' ")
     .replace(/#[^\n\r]*/g, " ");

@@ -32,17 +32,8 @@ function timeoutMs(): number {
 }
 
 export function providerConfig(): ProviderConfig {
-  const apiKey = (
-    process.env.AI_API_KEY ??
-    process.env.KILOCODE_API_KEY ??
-    process.env.KILO_API_KEY ??
-    ""
-  ).trim();
-  const baseUrl = (
-    process.env.AI_BASE_URL ??
-    process.env.KILO_BASE_URL ??
-    DEFAULT_BASE_URL
-  ).trim();
+  const apiKey = (process.env.AI_API_KEY ?? "").trim();
+  const baseUrl = (process.env.AI_BASE_URL ?? DEFAULT_BASE_URL).trim();
   const model = (process.env.AI_MODEL ?? "").trim() || DEFAULT_MODEL;
   const mock =
     !apiKey &&

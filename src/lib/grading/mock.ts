@@ -3,9 +3,9 @@ import type { GradingInput, GradingResponse } from "./schema";
 export const MOCK_MODEL = "mock-dev";
 
 /**
- * Deterministic stand-in used only when GEMINI_MOCK=1 in development and no API
- * key is configured. It lets you click through the whole grading/review flow
- * without calling Gemini. It is never enabled in production.
+ * Deterministic stand-in used only when AI_MOCK=1 in development and no API
+ * key is configured. It uses Python-specific structural checks (`#` comments,
+ * def blocks, docstrings) and is never enabled in production.
  */
 export function mockGrade(input: GradingInput): GradingResponse {
   const code = input.code;
@@ -16,17 +16,19 @@ export function mockGrade(input: GradingInput): GradingResponse {
 
   let ratio = 0.4;
 
-  if (/#include\s*<iostream>/.test(code)) ratio += 0.1;
-  else issues.push("Missing #include <iostream>.");
+  if (/^\s*#\s*.*$/m.test(code)) ratio += 0.1;
+  else issues.push("No Python # comments were found.");
 
-  if (/int\s+main\s*\(/.test(code)) ratio += 0.15;
-  else issues.push("No int main() entry point was found.");
+  if (/\bdef\s+[A-Za-z_]\w*\s*\(/.test(code)) ratio += 0.15;
+  else issues.push("No def function was found.");
 
-  if (/\b(for|while)\s*\(/.test(code)) ratio += 0.05;
-  if (/\b(if|switch)\s*\(/.test(code)) ratio += 0.05;
+  if (/\b(for|while)\s+[^:]+:/.test(code)) ratio += 0.05;
+  if (/\bif\s+[^:]+:/.test(code)) ratio += 0.05;
 
-  if (/\bstd::(cout|cin)\b|\bcout\b|\bcin\b/.test(code)) ratio += 0.1;
-  else issues.push("No console input or output was found.");
+  if (/\bprint\s*\(/.test(code) || /\binput\s*\(/.test(code)) ratio += 0.1;
+  else issues.push("No print() or input() call was found.");
+
+  if (/("""|''')/.test(code)) ratio += 0.05;
 
   if (lines.length >= 10) ratio += 0.05;
 
@@ -34,8 +36,8 @@ export function mockGrade(input: GradingInput): GradingResponse {
 
   return {
     score,
-    feedback_en: `Mock grading: ...`,
-    feedback_ar: `...`,
+    feedback_en: `Mock Python structural grade: ${issues.length === 1 ? "all checks passed" : "review the listed issues"}.`,
+    feedback_ar: `تقييم تجريبي لهيكل كود Python: ${issues.length === 1 ? "اجتاز كل الفحوص" : "راجع الملاحظات المدرجة"}.`,
     issues: issues.slice(0, 6),
     rubric_scores: [],
   };
