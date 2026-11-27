@@ -403,6 +403,8 @@ export async function deleteStudentAccountAction(
       studentId,
     });
 
+    await admin.from("attendance_audit_log").delete().eq("student_id", studentId);
+    await admin.from("attendance_audit_log").delete().eq("changed_by", studentId);
     const { error: cleanupError } = await admin.from("profiles").delete().eq("id", studentId);
     if (cleanupError) {
       console.error("deleteStudentAccountAction fallback cleanup failed:", cleanupError.message);
