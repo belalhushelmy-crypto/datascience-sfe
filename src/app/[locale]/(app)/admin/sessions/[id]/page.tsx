@@ -7,6 +7,7 @@ import { CsvDownloadButton } from "@/components/admin/csv-download-button";
 import { DeleteSessionForm } from "@/components/admin/delete-session-form";
 import { EditSessionForm } from "@/components/admin/edit-session-form";
 import { Alert, Card, CardHeader, EmptyState, PageHeader, badgeClass, buttonSecondary } from "@/components/ui";
+import { RenameSessionButton } from "@/components/admin/rename-session-button";
 import { requireStaff } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
@@ -105,6 +106,12 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
         description={formatDate(session.session_date, locale, { dateStyle: "full" })}
         action={
           <div className="flex flex-wrap items-start gap-2">
+            <RenameSessionButton
+              locale={locale}
+              sessionId={session.id}
+              title={session.title}
+              date={session.session_date}
+            />
             <CsvDownloadButton locale={locale} kind="session" id={session.id} label={t("exportAttendance")} />
             <Link href="/admin/sessions" className={buttonSecondary}>
               {t("back")}

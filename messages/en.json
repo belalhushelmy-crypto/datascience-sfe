@@ -489,6 +489,8 @@
       "title": "Sessions & attendance",
       "subtitle": "Create sessions, open a check-in code, and review who attended.",
       "createTitle": "New session",
+      "rename": "Rename session",
+      "renameHint": "You can rename a session at any time.",
       "published": "Published",
       "upcoming": "Upcoming",
       "noDescription": "No description provided.",
