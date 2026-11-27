@@ -14,6 +14,7 @@ import { levelFor, rankTierFor, TIER_STYLES } from "@/lib/gamification";
 import type { PointsBreakdown } from "@/lib/types";
 import { ProfileForm } from "./profile-form";
 import { PasswordChangeForm } from "./password-change-form";
+import { UsernameForm } from "./username-form";
 
 export default async function ProfilePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
@@ -163,6 +164,25 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
                 </Link>
               </div>
             ) : null}
+          </Card>
+
+          <Card>
+            <CardHeader title={t("usernameChangeTitle")} eyebrow="profile.account" />
+            <UsernameForm
+              locale={locale}
+              username={profile.username}
+              nextChangeDate={
+                profile.username_changed_at
+                  ? new Date(
+                      new Date(profile.username_changed_at).getTime() +
+                        7 * 24 * 60 * 60 * 1000,
+                    ).toLocaleDateString(locale === "ar" ? "en-GB" : locale, {
+                      dateStyle: "medium",
+                      timeZone: "Africa/Cairo",
+                    })
+                  : null
+              }
+            />
           </Card>
 
           <Card>

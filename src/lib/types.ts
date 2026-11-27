@@ -20,6 +20,7 @@ export type Profile = {
   role: UserRole;
   opted_out_of_leaderboard: boolean;
   grading_teacher_id?: string | null;
+  username_changed_at?: string | null;
   created_at: string;
 };
 

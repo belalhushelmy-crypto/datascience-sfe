@@ -258,9 +258,7 @@ export default async function SubmissionReviewPage({
               <p className="text-sm leading-relaxed text-[var(--ink-muted)]">{t("feedbackEditHint")}</p>
             </div>
           </Card>
-        </div>
 
-        <div className="space-y-6">
           <ReviewForm
             locale={locale}
             submissionId={data.id}
@@ -274,19 +272,19 @@ export default async function SubmissionReviewPage({
             approved={Boolean(data.feedback_approved_at)}
             requireApproval={data.assignments?.require_feedback_approval ?? true}
           />
-
-          <Card>
-            <CardHeader title={t("regradeTitle")} description={t("regradeSubtitle")} />
-            <div className="p-5">
-              {grading.configured ? (
-                <GradeSubmissionButton locale={locale} submissionId={data.id} />
-              ) : (
-                <Alert tone="info">{t("errors.gradingNotConfigured")}</Alert>
-              )}
-            </div>
-          </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader title={t("regradeTitle")} description={t("regradeSubtitle")} />
+        <div className="p-5">
+          {grading.configured ? (
+            <GradeSubmissionButton locale={locale} submissionId={data.id} />
+          ) : (
+            <Alert tone="info">{t("errors.gradingNotConfigured")}</Alert>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

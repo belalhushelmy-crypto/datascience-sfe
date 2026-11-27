@@ -282,6 +282,10 @@
     "optOut": "Hide me from the leaderboard",
     "optOutHint": "Your scores and attendance stay private either way.",
     "saved": "Profile updated.",
+    "usernameChanged": "Username updated.",
+    "usernameChangeHint": "You can change your username once every 7 days.",
+    "usernameNextChange": "Next change allowed after {date}.",
+    "usernameChangeTitle": "Change username",
     "save": "Save changes",
     "saving": "Saving…",
     "passwordNote": "Password changes are handled by your teacher.",
@@ -305,7 +309,11 @@
       "reauthFailed": "Could not send the verification code. Please try again.",
       "full_name": "Enter your full name (2–80 characters).",
       "display_name": "Enter a display name between 2 and 40 characters.",
-      "generic": "Could not save your changes. Please try again."
+      "generic": "Could not save your changes. Please try again.",
+      "username": "Use 3–20 letters, numbers or underscores.",
+      "usernameSame": "That is already your username.",
+      "usernameTaken": "That username is already taken.",
+      "usernameCooldown": "You can change your username again after {date}."
     },
     "viewProgress": "View progress"
   },
