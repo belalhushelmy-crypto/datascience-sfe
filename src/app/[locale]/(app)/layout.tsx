@@ -28,10 +28,10 @@ export default async function AppLayout({
         {t("skipToContent")}
       </a>
       <SiteHeader profile={profile} />
-      <main id="main-content" className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-6 sm:px-6 lg:pb-12 lg:ps-[var(--sidebar-width,15rem)] lg:pt-8">
+      <main id="main-content" className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-6 sm:px-6 md:pb-12 md:ps-[var(--sidebar-width,15rem)] md:pt-8">
         {children}
       </main>
-      <footer className="mt-auto hidden border-t border-[var(--line)] px-4 py-5 lg:block lg:ps-[var(--sidebar-width,15rem)]">
+      <footer className="mt-auto hidden border-t border-[var(--line)] px-4 py-5 md:block md:ps-[var(--sidebar-width,15rem)]">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--ink-muted)]">
           <span>// data_science_sfe</span>
           <span dir="ltr">SFE · Data Science · Python</span>
