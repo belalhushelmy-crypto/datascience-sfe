@@ -33,9 +33,14 @@ export function MaterialsPanel({
   const [state, formAction] = useActionState(submitMaterial, initialState);
 
   async function submitMaterial(previous: MaterialState, formData: FormData): Promise<MaterialState> {
-    const file = formData.get("file");
+    const files = formData.getAll("file").filter((entry): entry is File => entry instanceof File && entry.size > 0);
+    formData.delete("file");
 
-    if (file instanceof File && file.size > 0) {
+    if (files.length === 0) {
+      return { status: "error", error: t("errors.fileMissing") };
+    }
+
+    for (const file of files) {
       if (file.size > MAX_MATERIAL_FILE_BYTES) {
         return { status: "error", error: t("errors.fileSize") };
       }
@@ -48,9 +53,6 @@ export function MaterialsPanel({
         };
       }
 
-      // Upload via the standard multipart endpoint, which returns a proper
-      // response (signed-URL PUTs were observed to land the file but never
-      // return a response for larger payloads, leaving the form stuck).
       const supabase = createClient();
       const { error: uploadError } = await supabase.storage.from(MATERIAL_BUCKET).upload(upload.path, file, {
         contentType: file.type || "application/octet-stream",
@@ -66,14 +68,19 @@ export function MaterialsPanel({
         return { status: "error", error: t("errors.uploadFailed") };
       }
 
-      formData.set("file_path", upload.path);
-      formData.set("mime_type", file.type || "");
-      formData.set("title", file.name);
-      formData.set("type", "file");
-      formData.delete("file");
+      const perFile = new FormData();
+      perFile.set("locale", String(formData.get("locale") ?? ""));
+      perFile.set("session_id", String(formData.get("session_id") ?? ""));
+      perFile.set("file_path", upload.path);
+      perFile.set("mime_type", file.type || "");
+      perFile.set("title", file.name);
+      perFile.set("type", "file");
+
+      const result = await addMaterialAction(previous, perFile);
+      if (result.status === "error") return result;
     }
 
-    return addMaterialAction(previous, formData);
+    return { status: "success", message: t("materialsAdded", { count: files.length }) };
   }
 
   return (
@@ -93,8 +100,9 @@ export function MaterialsPanel({
               id="material_file"
               name="file"
               type="file"
+              multiple
               required
-              className={inputClass}
+              className={`${inputClass} cursor-pointer border-bronze-400/60 ring-2 ring-bronze-400/20 file:me-3 file:rounded-lg file:border-0 file:bg-bronze-500/15 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-bronze-700 dark:file:text-bronze-300`}
             />
             <p className="mt-1.5 text-xs text-[var(--ink-muted)]">{t("materialTitleAuto")}</p>
           </div>
