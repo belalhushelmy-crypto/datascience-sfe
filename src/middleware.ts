@@ -14,6 +14,7 @@ async function getAuthContext(
   supabaseUrl: string,
   supabaseAnonKey: string,
   cookies: NextRequest["cookies"],
+  response: NextResponse,
 ): Promise<{
   role: "student" | "teacher" | "admin" | "hr" | null;
   verified: boolean;
@@ -25,8 +26,12 @@ async function getAuthContext(
       getAll() {
         return cookies.getAll();
       },
-      setAll() {
-        // no-op in middleware read
+      setAll(cookiesToSet) {
+        // Persist refreshed auth cookies on the response so browsers receive
+        // the new refresh token instead of dropping it.
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
       },
     },
   });
@@ -87,6 +92,7 @@ export async function middleware(request: NextRequest) {
     supabaseUrl,
     supabaseAnonKey,
     request.cookies,
+    response,
   );
 
   // Authenticated but no profiles row: do not fall through as a student.

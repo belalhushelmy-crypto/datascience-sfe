@@ -88,6 +88,7 @@ export function SiteHeader({ profile }: { profile: Profile }) {
         ]
       : [
           { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard, exact: true },
+          { href: "/check-in", label: t("checkIn"), icon: UserCheck },
           { href: "/sessions", label: t("sessions"), icon: CalendarDays },
           { href: "/assignments", label: t("assignments"), icon: FileCode2 },
           { href: "/attendance", label: t("attendance"), icon: UserCheck },

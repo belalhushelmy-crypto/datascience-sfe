@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { AttendanceForm } from "@/components/admin/attendance-form";
+import { CodePanel } from "@/components/admin/code-panel";
 import { MaterialsPanel } from "@/components/admin/materials-panel";
 import { CsvDownloadButton } from "@/components/admin/csv-download-button";
 import { DeleteSessionForm } from "@/components/admin/delete-session-form";
@@ -12,6 +13,7 @@ import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatNumber } from "@/lib/utils";
 import { idSchema } from "@/lib/validation";
+import { toDataURL } from "qrcode";
 import type { AttendanceStatus } from "@/lib/types";
 
 type AdminSessionRow = {
@@ -98,6 +100,13 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
 
   const hasError = Boolean(sessionsResult.error || studentsResult.error || attendanceResult.error);
 
+  const codeActive = Boolean(
+    session.attendance_code && session.code_expires_at && Date.parse(session.code_expires_at) > Date.now(),
+  );
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  const checkInUrl = siteUrl ? `${siteUrl}/${locale}/check-in?code=${encodeURIComponent(session.attendance_code ?? "")}` : null;
+  const qrDataUrl = codeActive && checkInUrl ? await toDataURL(checkInUrl, { width: 200, margin: 1 }) : null;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -117,7 +126,17 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
 
       <div className="space-y-6">
         <div className="grid items-start gap-6 lg:grid-cols-2">
-          <MaterialsPanel locale={locale} sessionId={session.id} materials={materialsResult.data ?? []} />
+          <CodePanel
+          locale={locale}
+          sessionId={session.id}
+          code={session.attendance_code}
+          expiresAt={session.code_expires_at}
+          active={codeActive}
+          qrDataUrl={qrDataUrl}
+          checkInUrl={codeActive ? checkInUrl : null}
+        />
+
+        <MaterialsPanel locale={locale} sessionId={session.id} materials={materialsResult.data ?? []} />
 
           <Card>
             <CardHeader
