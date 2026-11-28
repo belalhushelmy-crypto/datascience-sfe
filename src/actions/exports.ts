@@ -254,9 +254,9 @@ export async function exportAssignmentCsvAction(
       .filter((score): score is number => score !== null);
 
     const onTime =
-      deadlineMs === null || last === null
-        ? "yes"
-        : Date.parse(last.created_at) <= deadlineMs
+      last === null
+        ? ""
+        : deadlineMs === null || Date.parse(last.created_at) <= deadlineMs
           ? "yes"
           : "no";
     const lateByMinutes =

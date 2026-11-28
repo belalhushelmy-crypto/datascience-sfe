@@ -140,7 +140,11 @@ export default async function StudentDashboard({ params }: { params: Promise<{ l
     attendanceLookupResult,
   ] = await Promise.all([
     supabase.from("attendance").select("status").eq("student_id", profile.id),
-    supabase.from("sessions").select("id", { count: "exact", head: true }).lte("session_date", cairoToday()),
+    supabase
+      .from("sessions")
+      .select("id", { count: "exact", head: true })
+      .lte("session_date", cairoToday())
+      .gte("created_at", profile.created_at),
     supabase
       .from("submissions")
       .select("assignment_id, final_score, ai_score, assignments(max_score)")

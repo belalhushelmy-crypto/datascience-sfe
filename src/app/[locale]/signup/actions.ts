@@ -100,8 +100,7 @@ export async function signupAction(
 
   if (error) {
     console.error("signupAction error:", error.message, error);
-    // Surface the actual error for debugging (remove in production if needed)
-    return { status: "error", error: `${t("errors.signupFailed")}: ${error.message}` };
+    return { status: "error", error: t("errors.signupFailed") };
   }
 
   if (!data.user) {

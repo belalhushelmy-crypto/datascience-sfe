@@ -181,6 +181,7 @@ export async function deleteAssignmentAction(formData: FormData): Promise<void> 
 
   if (error) {
     console.error("deleteAssignmentAction failed:", error.message);
+    redirect(`/${locale}/admin/assignments`);
   }
 
   const paths = (files ?? []).map((row) => row.file_path).filter(Boolean);

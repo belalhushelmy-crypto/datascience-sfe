@@ -10,7 +10,7 @@ import { CompilerMessage, DiagnosticList } from "@/components/compiler-message";
 import { requireProfile } from "@/lib/auth";
 import { colabUrl, isNotebookPath } from "@/lib/colab";
 import { displayFileName, isBinaryPath } from "@/lib/file-types";
-import { colabGithubUrl, ensureNotebookGithubPath } from "@/lib/notebook-github";
+
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatNumber, stringList } from "@/lib/utils";
@@ -107,17 +107,6 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
       ? await supabase.storage.from("submissions").createSignedUrls(paths, 600)
       : { data: null, error: null };
   const signedByPath = new Map((signedResult.data ?? []).map((row) => [row.path, row.signedUrl]));
-
-  const notebookColabByPath = new Map<string, string>();
-  for (const attempt of attempts) {
-    if (!attempt.file_path || !isNotebookPath(attempt.file_path) || !signedByPath.has(attempt.file_path)) continue;
-    try {
-      const path = await ensureNotebookGithubPath(attempt.id, attempt.file_path);
-      if (path) notebookColabByPath.set(attempt.file_path, colabGithubUrl(path));
-    } catch (error) {
-      console.error("[assignment] notebook Drive upload failed:", error);
-    }
-  }
 
   let bestPercent: number | null = null;
   for (const attempt of attempts) {
@@ -383,7 +372,7 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
                         <span className="mt-2 flex flex-wrap items-center gap-4">
                           {isNotebookPath(attempt.file_path) ? (
                             <a
-                              href={notebookColabByPath.get(attempt.file_path) ?? (signedUrl ? colabUrl(signedUrl) : "#")}
+                              href={signedUrl ? colabUrl(signedUrl) : "#"}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"

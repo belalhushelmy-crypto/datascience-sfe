@@ -5,7 +5,7 @@ import { Alert, Card, CardHeader, EmptyState, PageHeader, StatCard, buttonPrimar
 import { requireProfile } from "@/lib/auth";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
-import { formatDate, formatNumber } from "@/lib/utils";
+import { cairoToday, formatDate, formatNumber } from "@/lib/utils";
 import type { AttendanceStatus } from "@/lib/types";
 
 type SessionRow = {
@@ -38,7 +38,7 @@ export default async function StudentAttendancePage({ params }: { params: Promis
   const t = await getTranslations("attendance");
   const ts = await getTranslations("attendanceStatus");
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = cairoToday();
   const supabase = await createClient();
   const [sessionsResult, attendanceResult] = await Promise.all([
     supabase

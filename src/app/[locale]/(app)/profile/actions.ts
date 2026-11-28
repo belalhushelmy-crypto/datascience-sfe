@@ -121,7 +121,7 @@ export async function changeUsernameAction(
   }
 
   const { error: authError } = await admin.auth.admin.updateUserById(profile.id, {
-    user_metadata: { ...profile, username },
+    user_metadata: { username },
   });
   if (authError) {
     console.error("changeUsernameAction auth metadata update failed:", authError.message);

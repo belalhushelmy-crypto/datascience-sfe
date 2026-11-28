@@ -62,7 +62,7 @@ export function SubmissionForm({
       const start = e.currentTarget.selectionStart;
       const end = e.currentTarget.selectionEnd;
       const value = e.currentTarget.value;
-      e.currentTarget.value = value.substring(0, start) + " " + value.substring(end);
+      e.currentTarget.value = value.substring(0, start) + "  " + value.substring(end);
       e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 2;
       setCode(e.currentTarget.value);
     }

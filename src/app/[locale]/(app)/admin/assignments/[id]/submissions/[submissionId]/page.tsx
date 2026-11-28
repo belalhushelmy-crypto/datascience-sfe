@@ -3,13 +3,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { GradeSubmissionButton } from "@/components/admin/grade-submission-button";
 import { ReviewForm } from "@/components/admin/review-form";
+import { PublishNotebookButton } from "@/components/admin/publish-notebook-button";
 import { CodePanel } from "@/components/code-panel";
 import { CompilerMessage } from "@/components/compiler-message";
 import { Alert, Card, CardHeader, PageHeader, badgeClass } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
 import { colabUrl, isNotebookPath } from "@/lib/colab";
 import { displayFileName, isBinaryPath } from "@/lib/file-types";
-import { colabGithubUrl, ensureNotebookGithubPath } from "@/lib/notebook-github";
+import { colabGithubUrl } from "@/lib/notebook-github";
 import { toLocale } from "@/lib/locale";
 import { createClient } from "@/lib/supabase/server";
 import { gradingStatus } from "@/lib/grading/service";
@@ -32,6 +33,7 @@ type ReviewRow = {
   ai_model: string | null;
   ai_graded_at: string | null;
   feedback_approved_at: string | null;
+  notebook_github_path: string | null;
   final_score: number | string | null;
   status: SubmissionStatus;
   created_at: string;
@@ -71,7 +73,7 @@ export default async function SubmissionReviewPage({
   const { data, error } = await supabase
     .from("submissions")
     .select(
-      "id, assignment_id, file_path, code_text, submission_type, ai_score, ai_feedback, ai_feedback_ar, ai_issues, ai_model, ai_graded_at, feedback_approved_at, final_score, status, created_at, grading_error, assignments!submissions_assignment_id_fkey(id, title, max_score, require_feedback_approval), profiles!submissions_student_id_fkey(full_name, username, student_code)",
+      "id, assignment_id, file_path, code_text, submission_type, ai_score, ai_feedback, ai_feedback_ar, ai_issues, ai_model, ai_graded_at, feedback_approved_at, notebook_github_path, final_score, status, created_at, grading_error, assignments!submissions_assignment_id_fkey(id, title, max_score, require_feedback_approval), profiles!submissions_student_id_fkey(full_name, username, student_code)",
     )
     .eq("id", parsedSubmissionId.data)
     .eq("assignment_id", assignmentId.data)
@@ -94,15 +96,13 @@ export default async function SubmissionReviewPage({
     : { data: { signedUrl: null } as any, error: null };
   const signedUrl = signedResult.data?.signedUrl ?? null;
 
-  let colabHref = signedUrl ? colabUrl(signedUrl) : null;
-  if (isFileSubmission && isNotebookPath(data.file_path)) {
-    try {
-      const path = await ensureNotebookGithubPath(data.id, data.file_path!);
-      if (path) colabHref = colabGithubUrl(path);
-    } catch (error) {
-      console.error("[review] notebook Drive upload failed:", error);
-    }
-  }
+  // Do not publish notebooks on page view. Publishing is an explicit staff
+  // action (see PublishNotebookButton) because the Colab repo is public.
+  const colabHref = signedUrl && data.notebook_github_path
+    ? colabGithubUrl(data.notebook_github_path)
+    : signedUrl
+      ? colabUrl(signedUrl)
+      : null;
 
   return (
     <div className="space-y-6">
@@ -255,6 +255,9 @@ export default async function SubmissionReviewPage({
                 </CompilerMessage>
               ) : null}
               <p className="text-sm leading-relaxed text-[var(--ink-muted)]">{t("feedbackEditHint")}</p>
+              {isNotebookPath(data.file_path) ? (
+                <PublishNotebookButton locale={locale} submissionId={data.id} />
+              ) : null}
             </div>
           </Card>
 

@@ -206,8 +206,8 @@ Grading behavior worth knowing:
   Students can insert their own attempt but cannot set any score.
 - Automatic attempts stop after 3 tries; the teacher can always **Regrade**.
 - A submission flagged by the teacher is never silently un-flagged by a regrade.
-- Gemini is called with a strict `responseSchema` and the response is validated
-  again with zod before saving.
+- The OpenAI-compatible provider returns JSON that is validated again with zod
+  before saving; the API key never leaves the server.
 
 ### Test points, badges and the leaderboard
 

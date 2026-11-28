@@ -76,7 +76,7 @@ export function PasswordChangeForm({ locale }: { locale: string }) {
     e.preventDefault();
     setError(null);
 
-    if (code.trim().length !== 8) {
+    if (!/^\d{6,8}$/.test(code.trim())) {
       setError(t("errors.invalidCode"));
       return;
     }
@@ -113,7 +113,7 @@ export function PasswordChangeForm({ locale }: { locale: string }) {
     setCooldown(0);
   }
 
-  const codeComplete = code.trim().length === 8;
+  const codeComplete = /^\d{6,8}$/.test(code.trim());
 
   return (
     <div className="space-y-4">

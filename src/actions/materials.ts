@@ -133,9 +133,16 @@ export async function deleteMaterialAction(formData: FormData): Promise<void> {
   }
 
   const supabase = await createClient();
+  const safePath =
+    filePath &&
+    idSchema.safeParse(sessionId).success &&
+    filePath.startsWith(`${sessionId}/`) &&
+    !filePath.includes("..")
+      ? filePath
+      : null;
   await supabase.from("session_materials").delete().eq("id", materialId);
-  if (filePath) {
-    await supabase.storage.from(MATERIAL_BUCKET).remove([filePath]);
+  if (safePath) {
+    await supabase.storage.from(MATERIAL_BUCKET).remove([safePath]);
   }
   if (sessionId) {
     revalidatePath(`/${locale}/admin/sessions/${sessionId}`);

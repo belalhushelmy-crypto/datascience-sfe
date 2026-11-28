@@ -65,10 +65,10 @@ export function VerifyEmailForm({ locale, email }: { locale: string; email: stri
   function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
     e.preventDefault();
     const pasted = e.clipboardData.getData("text").slice(0, OTP_LENGTH);
-    if (new RegExp(`^\\d{${OTP_LENGTH}}$`).test(pasted)) {
-      const newOtp = pasted.split("");
+    if (/^\d{6,8}$/.test(pasted)) {
+      const newOtp = [...pasted.split(""), ...Array(OTP_LENGTH - pasted.length).fill("")];
       setOtp(newOtp);
-      const lastInput = document.getElementById(`otp-${OTP_LENGTH - 1}`) as HTMLInputElement | null;
+      const lastInput = document.getElementById(`otp-${pasted.length - 1}`) as HTMLInputElement | null;
       lastInput?.focus();
     }
   }
@@ -171,7 +171,7 @@ export function VerifyEmailForm({ locale, email }: { locale: string; email: stri
         idle={t("verify")}
         pendingLabel={t("verifying")}
         className="w-full"
-        disabled={otp.some((d) => !d) || (captchaRequired && !turnstileToken)}
+        disabled={tokenValue.length < 6 || (captchaRequired && !turnstileToken)}
       />
 
       <div className="mt-4 text-center">

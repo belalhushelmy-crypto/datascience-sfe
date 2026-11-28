@@ -238,9 +238,17 @@ export async function submitAssignmentAction(
     };
   }
 
-  // Images/PDFs are reviewed by a teacher, not by the text-based AI grader.
+  // Images/PDFs are reviewed manually; do not mark them as a failed AI job.
   if (isBinaryFile) {
-    await markGradingUnavailable(inserted.id);
+    const admin = createAdminClient();
+    await admin
+      .from("submissions")
+      .update({
+        status: "pending",
+        grading_error: "manual_review: awaiting teacher review",
+        grading_locked_at: null,
+      })
+      .eq("id", inserted.id);
   } else {
     // The database trigger enqueues one job per submission. This RPC is a
     // safety net for databases where the trigger migration has not run yet.
@@ -265,7 +273,7 @@ export async function submitAssignmentAction(
     return {
       status: "success",
       message: t("submittedFileOnly"),
-      grading: "failed",
+      grading: "queued",
       score: null,
     };
   }

@@ -54,8 +54,3 @@ export function serviceEnv(): ServiceEnv {
   }
   return serviceCache;
 }
-
-export function turnstileSiteKey(): string | undefined {
-  const env = publicEnv();
-  return env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-}

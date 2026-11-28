@@ -82,7 +82,7 @@ export default async function AdminAssignmentPage({ params }: { params: Promise<
       .eq("assignment_id", parsedId.data)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
-      .limit(100)
+      .limit(500)
       .returns<SubmissionRow[]>(),
     supabase.rpc("admin_assignment_overview"),
     supabase.rpc("admin_similarity_pairs", { p_assignment: parsedId.data }),

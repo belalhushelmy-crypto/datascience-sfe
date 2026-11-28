@@ -49,7 +49,7 @@ export function StudentWarningsCard({
               ? "bg-rose-500/10 text-rose-700 ring-rose-500/20 dark:text-rose-300"
               : w.kind === "late" || w.kind === "manual"
                 ? "bg-amber-500/10 text-amber-800 ring-amber-500/20 dark:text-amber-200"
-                : "bg-[var(--glass-inset)]0/10 text-[var(--ink-soft)] ring-slate-500/20 ";
+                : "bg-[var(--glass-inset)] text-[var(--ink-soft)] ring-slate-500/20 ";
           return (
             <li key={w.id}>
               <Link
