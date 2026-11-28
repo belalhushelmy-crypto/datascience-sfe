@@ -126,17 +126,7 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
 
       <div className="space-y-6">
         <div className="grid items-start gap-6 lg:grid-cols-2">
-          <CodePanel
-          locale={locale}
-          sessionId={session.id}
-          code={session.attendance_code}
-          expiresAt={session.code_expires_at}
-          active={codeActive}
-          qrDataUrl={qrDataUrl}
-          checkInUrl={codeActive ? checkInUrl : null}
-        />
-
-        <MaterialsPanel locale={locale} sessionId={session.id} materials={materialsResult.data ?? []} />
+          <MaterialsPanel locale={locale} sessionId={session.id} materials={materialsResult.data ?? []} />
 
           <Card>
             <CardHeader
@@ -166,8 +156,17 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ l
               <span className={badgeClass}>{t("excused")}: {formatNumber(excused, locale)}</span>
             </div>
           </Card>
-
         </div>
+
+        <CodePanel
+          locale={locale}
+          sessionId={session.id}
+          code={session.attendance_code}
+          expiresAt={session.code_expires_at}
+          active={codeActive}
+          qrDataUrl={qrDataUrl}
+          checkInUrl={codeActive ? checkInUrl : null}
+        />
       </div>
 
       <div id="manual-attendance" className="scroll-mt-20">
